@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from app.services.feishu import feishu_service
 from app.services.llm import call_agent
-from app.services.obsidian import write_to_obsidian
+from app.services.obsidian import write_to_obsidian, write_title_to_obsidian
 
 logger = logging.getLogger(__name__)
 
@@ -289,7 +289,7 @@ async def generate_titles(req: TitleWorkflowRequest):
             "style": req.style,
         }
 
-        asyncio.create_task(_fire_and_forget(write_to_obsidian(workflow_result)))
+        asyncio.create_task(_fire_and_forget(write_title_to_obsidian(workflow_result)))
 
         return {"success": True, "data": workflow_result}
 

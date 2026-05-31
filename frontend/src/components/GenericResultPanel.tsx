@@ -390,6 +390,131 @@ function VideoResultPanel({ data }: { data: Record<string, unknown> }) {
 }
 
 
+function TitleResultPanel({ data }: { data: Record<string, unknown> }) {
+  const titles = (data.titles as { style: string; content: string; click_prediction: string; reason: string }[]) || []
+  const platformOptimized = (data.platform_optimized as Record<string, { title: string; reason: string }[]>) || {}
+  const abTestPlan = (data.ab_test_plan as { dimension: string; title_a: string; title_b: string; prediction: string; reason: string }[]) || []
+  const style = (data.style as string) || ''
+
+  const styleLabelMap: Record<string, string> = {
+    clickbait: '吸睛型',
+    informative: '干货型',
+    emotional: '情感型',
+    suspense: '悬念型',
+  }
+
+  const platformNameMap: Record<string, { label: string; color: string; emoji: string }> = {
+    douyin: { label: '抖音', color: '#000000', emoji: '🎵' },
+    xiaohongshu: { label: '小红书', color: '#FF2442', emoji: '📕' },
+    bilibili: { label: 'B站', color: '#00A1D6', emoji: '📺' },
+    kuaishou: { label: '快手', color: '#FF6A00', emoji: '🎬' },
+  }
+
+  const predictionColorMap: Record<string, string> = {
+    '高': 'bg-[#34C759]/15 text-[#34C759]',
+    '中': 'bg-[#FF9500]/15 text-[#FF9500]',
+    '低': 'bg-[#86868B]/15 text-[#86868B]',
+  }
+
+  return (
+    <>
+      <div className="flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white/70 backdrop-blur-md border border-black/[0.04]">
+        <CheckCircle2 className="w-4.5 h-4.5 text-[#34C759] flex-shrink-0" />
+        <p className="text-[13px] text-[#1D1D1F]">
+          标题方案已生成并同步至本地 Obsidian 库{' '}
+          <span className="px-2 py-0.5 rounded-md bg-[#FF9500]/10 text-[#FF9500] text-[12px] font-medium">
+            {styleLabelMap[style] || style}
+          </span>
+        </p>
+      </div>
+
+      {titles.length > 0 && (
+        <SectionCard emoji="🔥" title="爆款标题方案">
+          <div className="space-y-3">
+            {titles.map((t, i) => (
+              <div key={i} className="flex items-start justify-between gap-3 px-4 py-3.5 rounded-xl bg-[#FAFAFA] border border-black/[0.04]">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="w-5 h-5 rounded-md bg-[#FF9500]/10 text-[#FF9500] text-[11px] font-medium flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                    <span className="px-2 py-0.5 rounded-md bg-[#007AFF]/8 text-[#007AFF] text-[11px] font-medium">{t.style}</span>
+                    <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${predictionColorMap[t.click_prediction] || 'bg-[#86868B]/15 text-[#86868B]'}`}>
+                      点击率：{t.click_prediction}
+                    </span>
+                  </div>
+                  <p className="text-[14px] text-[#1D1D1F] font-medium leading-relaxed">{t.content}</p>
+                  {t.reason && <p className="text-[12px] text-[#86868B] mt-1.5">{t.reason}</p>}
+                </div>
+                <CopyButton text={t.content} />
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {Object.keys(platformOptimized).length > 0 && (
+        <SectionCard emoji="📱" title="平台适配标题">
+          <div className="grid grid-cols-2 gap-3">
+            {Object.entries(platformOptimized).map(([platform, items]) => {
+              const config = platformNameMap[platform] || { label: platform, color: '#86868B', emoji: '📱' }
+              return (
+                <div key={platform} className="px-4 py-4 rounded-xl bg-[#FAFAFA] border border-black/[0.04]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[16px]">{config.emoji}</span>
+                    <span className="text-[13px] font-semibold text-[#1D1D1F]">{config.label}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {(items as { title: string; reason: string }[]).map((item, j) => (
+                      <div key={j} className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-[13px] text-[#1D1D1F] font-medium">{item.title}</p>
+                          {item.reason && <p className="text-[11px] text-[#86868B] mt-0.5">{item.reason}</p>}
+                        </div>
+                        <CopyButton text={item.title} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </SectionCard>
+      )}
+
+      {abTestPlan.length > 0 && (
+        <SectionCard emoji="📊" title="A/B 测试方案">
+          <div className="space-y-3">
+            {abTestPlan.map((group, i) => (
+              <div key={i} className="px-4 py-3.5 rounded-xl bg-[#FAFAFA] border border-black/[0.04]">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="px-2 py-0.5 rounded-md bg-[#5856D6]/10 text-[#5856D6] text-[11px] font-medium">{group.dimension}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="px-3 py-2.5 rounded-lg bg-white border border-[#007AFF]/15">
+                    <p className="text-[10px] text-[#007AFF] font-medium mb-1">A 版</p>
+                    <p className="text-[13px] text-[#1D1D1F]">{group.title_a}</p>
+                  </div>
+                  <div className="px-3 py-2.5 rounded-lg bg-white border border-[#FF9500]/15">
+                    <p className="text-[10px] text-[#FF9500] font-medium mb-1">B 版</p>
+                    <p className="text-[13px] text-[#1D1D1F]">{group.title_b}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mt-2.5">
+                  <span className="text-[11px] text-[#86868B]">预测：</span>
+                  <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${group.prediction.includes('A') ? 'bg-[#007AFF]/10 text-[#007AFF]' : group.prediction.includes('B') ? 'bg-[#FF9500]/10 text-[#FF9500]' : 'bg-[#86868B]/10 text-[#86868B]'}`}>
+                    {group.prediction}
+                  </span>
+                  {group.reason && <span className="text-[11px] text-[#86868B]">{group.reason}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+    </>
+  )
+}
+
+
 export default function GenericResultPanel() {
   const { result, activeWorkflow } = useAppStore()
   const wf = getWorkflowDef(activeWorkflow)
@@ -419,6 +544,35 @@ export default function GenericResultPanel() {
         className="mt-6 space-y-4"
       >
         <BossResultPanel data={data} />
+        {isCurrentCompleted && nextStep && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6"
+          >
+            <button
+              onClick={handleGoNext}
+              className="w-full h-[48px] rounded-2xl bg-[#007AFF] text-white text-[14px] font-medium flex items-center justify-center gap-2 hover:bg-[#0066DD] active:scale-[0.98] transition-all duration-200"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              当前步骤已完成，进入 {nextStep.emoji} {nextStep.label}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </motion.div>
+    )
+  }
+
+  if (activeWorkflow === 'title') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="mt-6 space-y-4"
+      >
+        <TitleResultPanel data={data} />
         {isCurrentCompleted && nextStep && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
