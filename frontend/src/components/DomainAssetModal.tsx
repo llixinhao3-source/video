@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 
-const API_BASE = ''
+const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 /* ================================================================
    Shared types & helpers

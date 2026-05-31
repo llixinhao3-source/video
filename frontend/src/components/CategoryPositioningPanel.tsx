@@ -5,6 +5,8 @@ import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, Loader2, Search, CheckCircle2, ArrowRight } from 'lucide-react'
 
+const API_BASE = import.meta.env.VITE_API_BASE || ''
+
 export default function CategoryPositioningPanel() {
   const { isGenerating, setIsGenerating, setResult, result, showToast, setInputValue } = useAppStore()
   const pipeline = useProjectPipeline()
@@ -22,7 +24,7 @@ export default function CategoryPositioningPanel() {
     setResult(null)
 
     try {
-      const response = await fetch('/api/v1/positioning/category', {
+      const response = await fetch(`${API_BASE}/api/v1/positioning/category`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword: categoryKeyword }),

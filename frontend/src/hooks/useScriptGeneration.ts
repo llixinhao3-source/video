@@ -2,7 +2,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { getWorkflowDef } from '@/types'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 
-const API_BASE = ''
+const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 export function useWorkflowGeneration() {
   const {

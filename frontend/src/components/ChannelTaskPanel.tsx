@@ -6,6 +6,8 @@ import { getWorkflowDef } from '@/types'
 import { Sparkles, Loader2, CheckCircle2, XCircle, Flame, Calendar, Target, Handshake, DollarSign } from 'lucide-react'
 import MarkdownContent from '@/components/MarkdownContent'
 
+const API_BASE = import.meta.env.VITE_API_BASE || ''
+
 const PLATFORMS = [
   { value: 'douyin', label: '抖音', emoji: '🎵' },
   { value: 'xiaohongshu', label: '小红书', emoji: '📕' },
@@ -103,7 +105,7 @@ export default function ChannelTaskPanel() {
       .map(([k]) => PLATFORMS.find((p) => p.value === k)?.label || k)
 
     try {
-      const response = await fetch('/api/v1/workflow/channel_task', {
+      const response = await fetch(`${API_BASE}/api/v1/workflow/channel_task`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

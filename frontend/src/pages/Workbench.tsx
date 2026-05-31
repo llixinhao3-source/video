@@ -4,6 +4,8 @@ import { useAppStore } from '@/store/useAppStore'
 import { getWorkflowDef } from '@/types'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 import Sidebar from '@/components/Sidebar'
+
+const API_BASE = import.meta.env.VITE_API_BASE || ''
 import Breadcrumb from '@/components/Breadcrumb'
 import DynamicInputs from '@/components/DynamicInputs'
 import DynamicStyleSelector from '@/components/DynamicStyleSelector'
@@ -124,7 +126,7 @@ export default function Workbench() {
     if (!pipeline.projectId) {
       const initId = async () => {
         try {
-          const res = await fetch('/api/v1/project/init', {
+          const res = await fetch(`${API_BASE}/api/v1/project/init`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({}),
@@ -195,7 +197,7 @@ export default function Workbench() {
     if (activeWorkflow === 'boss' && pipeline.projectId) {
       const fetchReport = async () => {
         try {
-          const res = await fetch(`/api/v1/project/${pipeline.projectId}/context`)
+          const res = await fetch(`${API_BASE}/api/v1/project/${pipeline.projectId}/context`)
           if (res.ok) {
             const json = await res.json()
             setResult({

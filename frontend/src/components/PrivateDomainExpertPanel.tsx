@@ -8,7 +8,7 @@ import {
 import { useAppStore } from '@/store/useAppStore'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 
-const API_BASE = ''
+const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 interface FormField {
     field_id: string

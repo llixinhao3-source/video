@@ -9,7 +9,7 @@ import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 import { useNavigate } from 'react-router-dom'
 import type { AgentDef } from '@/types'
 
-const API_BASE = ''
+const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 interface ExpertChainDef {
     key: string
