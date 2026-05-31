@@ -5,3 +5,4 @@ pydantic-settings
 openai
 httpx
 python-dotenv
+yt-dlp

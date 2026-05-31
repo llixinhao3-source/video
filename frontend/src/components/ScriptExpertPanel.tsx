@@ -9,7 +9,7 @@ import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 import { useNavigate } from 'react-router-dom'
 import type { AgentDef } from '@/types'
 
-const API_BASE = 'http://localhost:8001'
+const API_BASE = ''
 
 interface ExpertChainDef {
     key: string

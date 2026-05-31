@@ -2,7 +2,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { getWorkflowDef } from '@/types'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 
-const API_BASE = 'http://localhost:8001'
+const API_BASE = ''
 
 export function useWorkflowGeneration() {
   const {

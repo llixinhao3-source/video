@@ -147,7 +147,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   loadAvatars: async () => {
     try {
-      const res = await fetch('http://localhost:8001/api/v1/assets/avatars')
+      const res = await fetch('/api/v1/assets/avatars')
       if (!res.ok) return
       const json = await res.json()
       const list: AvatarItem[] = (json.data || []).map((a: Record<string, unknown>) => ({

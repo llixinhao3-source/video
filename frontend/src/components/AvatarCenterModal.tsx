@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useAppStore, type AvatarItem } from '@/store/useAppStore'
 
-const API_BASE = 'http://localhost:8001'
+const API_BASE = ''
 
 const TABS = [
     { key: 'library', icon: '👥', label: '现役数字人库', sub: '增删改查' },

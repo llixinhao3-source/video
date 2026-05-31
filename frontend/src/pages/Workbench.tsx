@@ -124,7 +124,7 @@ export default function Workbench() {
     if (!pipeline.projectId) {
       const initId = async () => {
         try {
-          const res = await fetch('http://localhost:8001/api/v1/project/init', {
+          const res = await fetch('/api/v1/project/init', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({}),
@@ -195,7 +195,7 @@ export default function Workbench() {
     if (activeWorkflow === 'boss' && pipeline.projectId) {
       const fetchReport = async () => {
         try {
-          const res = await fetch(`http://localhost:8001/api/v1/project/${pipeline.projectId}/context`)
+          const res = await fetch(`/api/v1/project/${pipeline.projectId}/context`)
           if (res.ok) {
             const json = await res.json()
             setResult({

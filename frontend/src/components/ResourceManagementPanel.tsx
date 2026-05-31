@@ -145,7 +145,7 @@ export default function ResourceManagementPanel() {
           id: 'video-asset',
           type: 'video',
           title: '已生成视频',
-          content: videoUrl.startsWith('http') ? videoUrl : `http://localhost:8001${videoUrl}`,
+          content: videoUrl.startsWith('http') ? videoUrl : videoUrl,
           source: '视频制作',
           createdAt: new Date().toLocaleDateString(),
         })

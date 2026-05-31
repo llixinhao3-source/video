@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import MarkdownContent from '@/components/MarkdownContent'
 
-const API_BASE = 'http://localhost:8001'
+const API_BASE = ''
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)

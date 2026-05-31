@@ -8,7 +8,7 @@ import {
 import { useAppStore } from '@/store/useAppStore'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 
-const API_BASE = 'http://localhost:8001'
+const API_BASE = ''
 
 interface FormField {
     field_id: string

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 
-const API_BASE = 'http://localhost:8001'
+const API_BASE = ''
 
 /* ================================================================
    Shared types & helpers

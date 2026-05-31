@@ -9,7 +9,7 @@ import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 import AvatarCenterModal from '@/components/AvatarCenterModal'
 import DomainAssetModal from '@/components/DomainAssetModal'
 
-const API_BASE = 'http://localhost:8001'
+const API_BASE = ''
 
 /* ─────────────────────────────────────
    Domain‑specific expert parameters

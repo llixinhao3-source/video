@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 
-const API_BASE = 'http://localhost:8001'
+const API_BASE = ''
 
 export const SOP_FLOW = [
   { id: 'positioning', label: '账号定位分析', path: '/account-profile', emoji: '💡' },
