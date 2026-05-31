@@ -289,7 +289,7 @@ PROMPT_TEMPLATES = {
         '      "tag": "话题标签",\n'
         '      "type": "行业大词/精准长尾词/热点词",\n'
         '      "reason": "推荐理由"\n'
-        "    }\n'
+        '    }\n'
         '  ]\n'
         "}\n"
     ),
@@ -316,34 +316,10 @@ PROMPT_TEMPLATES = {
         "\n"
         "## 输出格式（严格 JSON）\n"
         "必须返回如下结构的 JSON：\n"
-        "{\n"
-        '  "platform_titles": {\n'
-        '    "douyin": [\n'
-        "      {\n"
-        '        "title": "抖音适配标题",\n'
-        '        "reason": "优化逻辑说明"\n'
-        "      }\n"
-        "    ],\n"
-        '    "xiaohongshu": [\n'
-        "      {\n"
-        '        "title": "小红书适配标题",\n'
-        '        "reason": "优化逻辑说明"\n'
-        "      }\n"
-        "    ],\n"
-        '    "bilibili": [\n'
-        "      {\n"
-        '        "title": "B站适配标题",\n'
-        '        "reason": "优化逻辑说明"\n'
-        "      }\n"
-        "    ],\n"
-        '    "kuaishou": [\n'
-        "      {\n"
-        '        "title": "快手适配标题",\n'
-        '        "reason": "优化逻辑说明"\n'
-        "      }\n"
-        "    ]\n"
-        "  }\n"
-        "}\n"
+        '{"platform_titles": {"douyin": [{"title": "抖音适配标题", "reason": "优化逻辑说明"}], '
+        '"xiaohongshu": [{"title": "小红书适配标题", "reason": "优化逻辑说明"}], '
+        '"bilibili": [{"title": "B站适配标题", "reason": "优化逻辑说明"}], '
+        '"kuaishou": [{"title": "快手适配标题", "reason": "优化逻辑说明"}]}}\n'
     ),
 
     "ab_test_planner": (
@@ -363,18 +339,8 @@ PROMPT_TEMPLATES = {
         "\n"
         "## 输出格式（严格 JSON）\n"
         "必须返回如下结构的 JSON：\n"
-        "{\n"
-        '  "test_groups": [\n'
-        "    {\n"
-        '      "dimension": "测试维度（如：标题长度/情绪强度/数字使用/悬念程度）",\n"
-        '      "title_a": "A版标题",\n'
-        '      "title_b": "B版标题",\n'
-        '      "prediction": "A胜/B胜/持平",\n'
-        '      "reason": "预测原因说明"\n'
-        "    }\n"
-        "  ],\n"
-        '  "recommendation": "最终推荐标题",\n'
-        '  "recommendation_reason": "推荐理由"\n'
-        "}\n"
+        '{"test_groups": [{"dimension": "测试维度", "title_a": "A版标题", '
+        '"title_b": "B版标题", "prediction": "A胜/B胜/持平", "reason": "预测原因说明"}], '
+        '"recommendation": "最终推荐标题", "recommendation_reason": "推荐理由"}\n'
     ),
 }
