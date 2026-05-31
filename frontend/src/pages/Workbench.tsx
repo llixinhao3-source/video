@@ -243,7 +243,7 @@ export default function Workbench() {
       <div className="flex h-screen bg-[#F5F5F7]">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-[860px] mx-auto px-8 py-8">
+          <div className="max-w-[860px] mx-auto px-4 md:px-8 py-6 md:py-8 pt-16 md:pt-8">
             <motion.div
               key="positioning"
               initial={{ opacity: 0, x: 10 }}
@@ -268,7 +268,7 @@ export default function Workbench() {
       <div className="flex h-screen bg-[#F5F5F7]">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-[860px] mx-auto px-8 py-8">
+          <div className="max-w-[860px] mx-auto px-4 md:px-8 py-6 md:py-8 pt-16 md:pt-8">
             <motion.div
               key="category"
               initial={{ opacity: 0, x: 10 }}
@@ -292,7 +292,7 @@ export default function Workbench() {
       <div className="flex h-screen bg-[#F5F5F7]">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-[860px] mx-auto px-8 py-8">
+          <div className="max-w-[860px] mx-auto px-4 md:px-8 py-6 md:py-8 pt-16 md:pt-8">
             <motion.div
               key="market"
               initial={{ opacity: 0, x: 10 }}
@@ -302,7 +302,7 @@ export default function Workbench() {
               <div className="mb-6">
                 <Breadcrumb />
               </div>
-              <div className="px-7 py-7 rounded-2xl bg-white border border-black/[0.04] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-7">
+              <div className="px-4 py-5 md:px-7 md:py-7 rounded-2xl bg-white border border-black/[0.04] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-5 md:space-y-7">
                 <DynamicInputs inputs={wf.inputs} />
                 <DynamicStyleSelector
                   styles={wf.styles}
@@ -332,7 +332,7 @@ export default function Workbench() {
     <div className="flex h-screen bg-[#F5F5F7]">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-[860px] mx-auto px-8 py-8">
+        <div className="max-w-[860px] mx-auto px-4 md:px-8 py-6 md:py-8 pt-16 md:pt-8">
           <motion.div
             key={activeWorkflow}
             initial={{ opacity: 0, x: 10 }}

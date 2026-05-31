@@ -1,9 +1,10 @@
 import { useAppStore } from '@/store/useAppStore'
 import { WORKFLOWS } from '@/types'
-import { Film, CheckCircle2 } from 'lucide-react'
-import { motion } from 'motion/react'
+import { Film, CheckCircle2, Menu, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useProjectPipeline, SOP_FLOW, VIDEO_TOOLS_FLOW, AUX_FLOW } from '@/hooks/useProjectPipeline'
+import { useState, useEffect } from 'react'
 
 const WORKFLOW_ID_TO_PATH: Record<string, string> = {
   positioning: '/account-profile',
@@ -25,15 +26,21 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const pipeline = useProjectPipeline()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleClick = (wfId: string) => {
     setActiveWorkflow(wfId)
     const path = WORKFLOW_ID_TO_PATH[wfId] || '/'
     navigate(path)
+    setMobileOpen(false)
   }
 
-  return (
-    <aside className="w-[280px] min-w-[280px] h-screen bg-white flex flex-col border-r border-black/[0.04]">
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
+
+  const sidebarContent = (
+    <>
       <div className="px-6 pt-7 pb-6">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-[#1D1D1F] flex items-center justify-center">
@@ -181,6 +188,50 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      <aside className="hidden md:flex w-[280px] min-w-[280px] h-screen bg-white flex-col border-r border-black/[0.04]">
+        {sidebarContent}
+      </aside>
+
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 z-40 md:hidden"
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              className="fixed left-0 top-0 w-[280px] h-screen bg-white flex flex-col border-r border-black/[0.04] z-50 md:hidden"
+            >
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F5F5F7] z-50"
+              >
+                <X className="w-4 h-4 text-[#86868B]" />
+              </button>
+              {sidebarContent}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed top-4 left-4 w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-black/[0.04] shadow-sm z-30 md:hidden"
+      >
+        <Menu className="w-5 h-5 text-[#1D1D1F]" />
+      </button>
+    </>
   )
 }
