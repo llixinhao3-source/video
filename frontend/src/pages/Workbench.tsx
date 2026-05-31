@@ -12,6 +12,7 @@ import DynamicInputs from '@/components/DynamicInputs'
 import DynamicStyleSelector from '@/components/DynamicStyleSelector'
 import DynamicAgentToggles from '@/components/DynamicAgentToggles'
 import ScriptExpertPanel from '@/components/ScriptExpertPanel'
+import TitleExpertPanel from '@/components/TitleExpertPanel'
 import VideoExpertChainPanel from '@/components/VideoExpertChainPanel'
 import PrivateDomainExpertPanel from '@/components/PrivateDomainExpertPanel'
 import ResourceManagementPanel from '@/components/ResourceManagementPanel'
@@ -33,6 +34,7 @@ const URL_TO_WORKFLOW: Record<string, string> = {
   '/category-positioning': 'category',
   '/topic-selection': 'topic',
   '/script-creation': 'script',
+  '/title-generation': 'title',
   '/video-production': 'video',
   '/video-deconstruct': 'videoDeconstruct',
   '/viral-follow-up': 'viralFollowUp',
@@ -147,6 +149,38 @@ function buildScriptText(sd: Record<string, unknown>): string {
   return body
 }
 
+function buildScriptSummary(sd: Record<string, unknown>): string {
+  const parts: string[] = []
+  const body = (sd.body_content as string) || (sd.script as string) || ''
+  if (body) {
+    parts.push(body.slice(0, 500))
+  }
+  const titleAndHook = sd.title_and_hook as Record<string, unknown> | undefined
+  if (titleAndHook) {
+    const titles = titleAndHook.titles
+    if (Array.isArray(titles) && titles.length > 0) {
+      const titleTexts = titles.map((t: Record<string, unknown>) => t.content || t).filter(Boolean)
+      if (titleTexts.length > 0) parts.push(`已有标题：${titleTexts.join('、')}`)
+    }
+    const hooks = titleAndHook.hooks
+    if (Array.isArray(hooks) && hooks.length > 0) {
+      const hookTexts = hooks.map((h: Record<string, unknown>) => h.content || h).filter(Boolean)
+      if (hookTexts.length > 0) parts.push(`钩子：${hookTexts.join('、')}`)
+    }
+  }
+  const ctaAndTags = sd.cta_and_tags as Record<string, unknown> | undefined
+  if (ctaAndTags) {
+    if (ctaAndTags.guide_words) parts.push(`引导语：${String(ctaAndTags.guide_words)}`)
+    const tags = ctaAndTags.tags
+    if (Array.isArray(tags) && tags.length > 0) parts.push(`标签：${tags.join(' ')}`)
+  }
+  if (sd.risk_report) {
+    const rr = sd.risk_report as Record<string, unknown>
+    if (rr.is_safe === false) parts.push('⚠️ 文案有合规风险，标题需注意规避')
+  }
+  return parts.join('\n')
+}
+
 function extractTopicText(data: Record<string, unknown>): string {
   const lines: string[] = []
   if (data.recommended_topics && Array.isArray(data.recommended_topics)) {
@@ -240,6 +274,11 @@ export default function Workbench() {
       const sd = pipeline.scriptData as Record<string, unknown>
       const body = buildScriptText(sd)
       if (body) setInputValue('script', body)
+    }
+    if (activeWorkflow === 'title' && pipeline.scriptData) {
+      const sd = pipeline.scriptData as Record<string, unknown>
+      const summary = buildScriptSummary(sd)
+      if (summary) setInputValue('scriptSummary', summary)
     }
     if (activeWorkflow === 'private' && pipeline.accountProfile) {
       const ap = pipeline.accountProfile as Record<string, unknown>
@@ -435,6 +474,8 @@ export default function Workbench() {
 
               {activeWorkflow === 'script' ? (
                 <ScriptExpertPanel />
+              ) : activeWorkflow === 'title' ? (
+                <TitleExpertPanel />
               ) : activeWorkflow === 'video' ? (
                 <VideoExpertChainPanel />
               ) : activeWorkflow === 'private' ? (

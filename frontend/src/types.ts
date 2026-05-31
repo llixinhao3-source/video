@@ -113,6 +113,27 @@ export const WORKFLOWS: WorkflowDef[] = [
     apiPath: '/api/v1/workflow/create_script',
   },
   {
+    id: 'title',
+    label: '标题生成',
+    emoji: '🏷️',
+    breadcrumb: '工作流 / 标题生成',
+    inputs: [
+      { key: 'scriptSummary', label: '文案摘要', placeholder: '输入文案核心内容或自动从上一步填充，AI 将基于此生成爆款标题...', multiline: true },
+    ],
+    styles: [
+      { value: 'clickbait', label: '吸睛型', emoji: '🔥' },
+      { value: 'informative', label: '干货型', emoji: '📚' },
+      { value: 'emotional', label: '情感型', emoji: '❤️' },
+      { value: 'suspense', label: '悬念型', emoji: '🤔' },
+    ],
+    agents: [
+      { key: 'titleMaster', label: '爆款标题师', desc: '生成多版爆款标题' },
+      { key: 'platformOptimizer', label: '平台适配师', desc: '不同平台标题优化' },
+      { key: 'abTestPlanner', label: 'A/B测试师', desc: '标题对比方案' },
+    ],
+    apiPath: '/api/v1/workflow/generate_titles',
+  },
+  {
     id: 'video',
     label: '视频制作',
     emoji: '📹',

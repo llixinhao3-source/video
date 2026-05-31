@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 PIPELINE_DIR = Path("storage/pipeline")
 
-StepStatus = Literal["positioning", "topic", "script", "video", "done"]
+StepStatus = Literal["positioning", "topic", "script", "title", "video", "done"]
 
-STEP_FLOW: list[StepStatus] = ["positioning", "topic", "script", "video", "done"]
+STEP_FLOW: list[StepStatus] = ["positioning", "topic", "script", "title", "video", "done"]
 
 
 class ShortVideoProject(BaseModel):
@@ -23,6 +23,7 @@ class ShortVideoProject(BaseModel):
     account_profile: dict | None = None
     selected_topic: dict | None = None
     script_output: dict | None = None
+    title_output: dict | None = None
     video_output: dict | None = None
 
     private_domain_data: dict | None = None
@@ -76,13 +77,15 @@ _FIELD_MAP: dict[StepStatus, str] = {
     "positioning": "account_profile",
     "topic": "selected_topic",
     "script": "script_output",
+    "title": "title_output",
     "video": "video_output",
 }
 
 _STATUS_ADVANCE: dict[StepStatus, StepStatus] = {
     "positioning": "topic",
     "topic": "script",
-    "script": "video",
+    "script": "title",
+    "title": "video",
     "video": "done",
     "done": "done",
 }

@@ -11,6 +11,7 @@ const WORKFLOW_ID_TO_PATH: Record<string, string> = {
   category: '/category-positioning',
   topic: '/topic-selection',
   script: '/script-creation',
+  title: '/title-generation',
   video: '/video-production',
   videoDeconstruct: '/video-deconstruct',
   viralFollowUp: '/viral-follow-up',

@@ -53,6 +53,13 @@ export function useWorkflowGeneration() {
           style: style || '专业',
           agents,
         }
+      } else if (activeWorkflow === 'title') {
+        apiPath = '/api/v1/workflow/generate_titles'
+        body = {
+          script_summary: inputValues.scriptSummary || '',
+          style: style || 'clickbait',
+          agents,
+        }
       } else {
         body = {
           inputs: inputValues,
@@ -97,6 +104,11 @@ export function useWorkflowGeneration() {
         pipeline.saveScript(json.data || json, false)
         pipeline.markStepCompleted('script')
         showToast('文案生成成功！', 'success')
+      } else if (activeWorkflow === 'title') {
+        setResult(json.data || json)
+        pipeline.saveTitle(json.data || json, false)
+        pipeline.markStepCompleted('title')
+        showToast('标题生成成功！', 'success')
       } else if (json.success && json.data) {
         if (activeWorkflow === 'positioning') {
           const d = json.data

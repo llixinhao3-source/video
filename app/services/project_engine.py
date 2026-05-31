@@ -49,6 +49,24 @@ AGENT_PRESETS: dict[str, str] = {
         "并生成 3-5 个精准的话题标签。标签必须包含：1 个行业大词、1-2 个精准长尾词、1 个热点词。"
         "除了追加后的完整文案，不要输出任何解释性废话。"
     ),
+    "title_expert": (
+        "你是一个短视频【爆款标题师】。你的职责是深度分析传入的文案内容，"
+        "生成 5 个不同风格的爆款标题。每个标题需要标注：适用平台（抖音/小红书/B站/快手）、"
+        "风格类型（吸睛型/干货型/情感型/悬念型）、预估点击率。"
+        "输出格式为 Markdown 列表。除了标题列表，不要输出任何解释性废话。"
+    ),
+    "platform_optimizer": (
+        "你是一个短视频【平台适配师】。你的职责是根据不同平台的算法特点和用户偏好，"
+        "将传入的标题进行针对性优化。需要为以下平台各生成 2 个优化标题："
+        "抖音（短平快、情绪化）、小红书（生活化、种草风）、B站（知识感、趣味性）、快手（接地气、直白）。"
+        "输出格式为按平台分组的 Markdown 列表。除了优化结果，不要输出任何解释性废话。"
+    ),
+    "ab_test_planner": (
+        "你是一个短视频【A/B测试师】。你的职责是基于传入的标题方案，"
+        "设计 3 组 A/B 测试对比方案。每组需要说明：测试维度（如长度/情绪/数字使用）、"
+        "A 版标题、B 版标题、预期胜负及原因。"
+        "输出格式为 Markdown 表格。除了测试方案，不要输出任何解释性废话。"
+    ),
 }
 
 # 前端 agent key → 后端 agent key 映射
@@ -60,9 +78,11 @@ FRONTEND_AGENT_MAP: dict[str, str] = {
     "sellingPoint": "usp_planner",
     "riskControl": "risk_control",
     "marketingCopy": "marketing_helper",
+    "titleMaster": "title_expert",
+    "platformOptimizer": "platform_optimizer",
+    "abTestPlanner": "ab_test_planner",
 }
 
-# 文件链依赖表：前端 agent key → (source_file, target_file)
 AGENT_FILE_CHAIN: dict[str, tuple[str, str]] = {
     "framework": ("0_选题方向.md", "1_文案初稿.md"),
     "titleGenerator": ("1_文案初稿.md", "2_爆款标题.md"),
@@ -71,6 +91,9 @@ AGENT_FILE_CHAIN: dict[str, tuple[str, str]] = {
     "sellingPoint": ("1_文案初稿.md", "5_卖点植入.md"),
     "riskControl": ("1_文案初稿.md", "6_合规版文案.md"),
     "marketingCopy": ("6_合规版文案.md", "7_终稿带标签.md"),
+    "titleMaster": ("1_文案初稿.md", "8_爆款标题.md"),
+    "platformOptimizer": ("8_爆款标题.md", "9_平台适配标题.md"),
+    "abTestPlanner": ("8_爆款标题.md", "10_AB测试方案.md"),
 }
 
 

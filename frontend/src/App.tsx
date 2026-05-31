@@ -14,6 +14,7 @@ export default function App() {
             <Route path="/category-positioning" element={<Workbench />} />
             <Route path="/topic-selection" element={<Workbench />} />
             <Route path="/script-creation" element={<Workbench />} />
+            <Route path="/title-generation" element={<Workbench />} />
             <Route path="/video-production" element={<Workbench />} />
             <Route path="/video-deconstruct" element={<Workbench />} />
             <Route path="/viral-follow-up" element={<Workbench />} />

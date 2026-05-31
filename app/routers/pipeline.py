@@ -24,7 +24,7 @@ class UpdateStepRequest(BaseModel):
     project_id: str = Field(..., description="项目 ID")
     step_name: str = Field(
         ...,
-        description="步骤名称：positioning | topic | script | video | done",
+        description="步骤名称：positioning | topic | script | title | video | done",
     )
     data: dict = Field(..., description="该步骤产出的 JSON 数据")
     advance: bool = Field(True, description="是否自动推进到下一步")
@@ -70,6 +70,8 @@ async def update_pipeline_step(req: UpdateStepRequest):
         changed_fields.append("selected_topic")
     elif req.step_name == "script" and proj.script_output is not None:
         changed_fields.append("script_output")
+    elif req.step_name == "title" and proj.title_output is not None:
+        changed_fields.append("title_output")
     elif req.step_name == "video" and proj.video_output is not None:
         changed_fields.append("video_output")
 
@@ -93,6 +95,7 @@ async def fetch_pipeline_context(project_id: str):
         "account_profile": proj.account_profile,
         "selected_topic": proj.selected_topic,
         "script_output": proj.script_output,
+        "title_output": proj.title_output,
         "video_output": proj.video_output,
         "private_domain_data": proj.private_domain_data,
         "boss_report_url": proj.boss_report_url,

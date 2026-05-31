@@ -216,3 +216,85 @@ async def create_script(req: WorkflowRequest):
     except Exception as e:
         logger.exception("Workflow create_script failed")
         raise HTTPException(status_code=500, detail="Internal server error") from e
+
+
+TITLE_AGENT_SWITCH_KEYS = [
+    "title_master",
+    "platform_optimizer",
+    "ab_test_planner",
+]
+
+
+class TitleWorkflowRequest(BaseModel):
+    script_summary: str = Field(..., description="文案摘要内容")
+    style: str = Field("clickbait", description="标题风格：clickbait/informative/emotional/suspense")
+    agents: dict[str, bool] = Field(
+        default_factory=lambda: {k: True for k in TITLE_AGENT_SWITCH_KEYS},
+        description="标题专家开关字典",
+    )
+
+
+@router.post("/generate_titles")
+async def generate_titles(req: TitleWorkflowRequest):
+    agents = {k: req.agents.get(k, False) for k in TITLE_AGENT_SWITCH_KEYS}
+
+    try:
+        style_map = {
+            "clickbait": "吸睛型",
+            "informative": "干货型",
+            "emotional": "情感型",
+            "suspense": "悬念型",
+        }
+        style_label = style_map.get(req.style, "吸睛型")
+
+        titles_result = {}
+        if agents["title_master"]:
+            titles_result = await call_agent(
+                "title_expert",
+                f"文案内容：{req.script_summary}\n标题风格：{style_label}\n请生成 5 个爆款标题方案。",
+            )
+
+        platform_result = {}
+        if agents["platform_optimizer"]:
+            titles_text = ""
+            if titles_result.get("titles"):
+                titles_text = " | ".join(
+                    t.get("content", "") for t in titles_result["titles"]
+                )
+            platform_input = (
+                f"文案内容：{req.script_summary}\n"
+                f"已有标题：{titles_text or '暂无'}\n"
+                f"请为各平台生成适配标题。"
+            )
+            platform_result = await call_agent("platform_optimizer", platform_input)
+
+        ab_test_result = {}
+        if agents["ab_test_planner"]:
+            titles_text = ""
+            if titles_result.get("titles"):
+                titles_text = " | ".join(
+                    t.get("content", "") for t in titles_result["titles"]
+                )
+            ab_input = (
+                f"文案内容：{req.script_summary}\n"
+                f"已有标题：{titles_text or '暂无'}\n"
+                f"请设计 A/B 测试对比方案。"
+            )
+            ab_test_result = await call_agent("ab_test_planner", ab_input)
+
+        workflow_result: dict[str, Any] = {
+            "titles": titles_result.get("titles", []),
+            "platform_optimized": platform_result.get("platform_titles", {}),
+            "ab_test_plan": ab_test_result.get("test_groups", []),
+            "style": req.style,
+        }
+
+        asyncio.create_task(_fire_and_forget(write_to_obsidian(workflow_result)))
+
+        return {"success": True, "data": workflow_result}
+
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("Workflow generate_titles failed")
+        raise HTTPException(status_code=500, detail="Internal server error") from e

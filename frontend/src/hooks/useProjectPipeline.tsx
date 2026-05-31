@@ -6,6 +6,7 @@ export const SOP_FLOW = [
   { id: 'category', label: '品类定位分析', path: '/category-positioning', emoji: '🔍' },
   { id: 'topic', label: '短视频选题', path: '/topic-selection', emoji: '🎬' },
   { id: 'script', label: '文案创作', path: '/script-creation', emoji: '📝' },
+  { id: 'title', label: '标题生成', path: '/title-generation', emoji: '🏷️' },
   { id: 'video', label: '视频制作', path: '/video-production', emoji: '📹' },
   { id: 'private', label: '私域运营', path: '/private-domain', emoji: '👥' },
 ] as const
@@ -29,6 +30,7 @@ interface PipelineState {
   accountProfile: Record<string, unknown> | null
   selectedTopic: Record<string, unknown> | null
   scriptData: Record<string, unknown> | null
+  titleData: Record<string, unknown> | null
   videoAssets: Record<string, unknown> | null
 }
 
@@ -40,6 +42,7 @@ interface PipelineContextValue extends PipelineState {
   saveProfile: (data: Record<string, unknown>, goNext?: boolean) => void
   saveTopic: (data: Record<string, unknown>, goNext?: boolean) => void
   saveScript: (data: Record<string, unknown>, goNext?: boolean) => void
+  saveTitle: (data: Record<string, unknown>, goNext?: boolean) => void
   saveVideoAssets: (data: Record<string, unknown>, goNext?: boolean) => void
   proceedToNext: (fromStep: string) => string | null
   goToStep: (stepId: string) => string
@@ -68,6 +71,7 @@ function loadFromStorage(): PipelineState {
     accountProfile: null,
     selectedTopic: null,
     scriptData: null,
+    titleData: null,
     videoAssets: null,
   }
 }
@@ -147,7 +151,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       ...prev,
       scriptData: data,
       completedSteps: prev.completedSteps.includes('script') ? prev.completedSteps : [...prev.completedSteps, 'script'],
-      currentStep: goNext ? 'video' : prev.currentStep,
+      currentStep: goNext ? 'title' : prev.currentStep,
     }))
     const id = state.projectId
     if (id) {
@@ -155,6 +159,23 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: id, step: 'script_writing', data, advance: goNext }),
+      }).catch(() => {})
+    }
+  }, [state.projectId])
+
+  const saveTitle = useCallback((data: Record<string, unknown>, goNext = false) => {
+    setState((prev) => ({
+      ...prev,
+      titleData: data,
+      completedSteps: prev.completedSteps.includes('title') ? prev.completedSteps : [...prev.completedSteps, 'title'],
+      currentStep: goNext ? 'video' : prev.currentStep,
+    }))
+    const id = state.projectId
+    if (id) {
+      fetch(`${getApiBase()}/api/v1/project/save-step`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: id, step: 'title_generation', data, advance: goNext }),
       }).catch(() => {})
     }
   }, [state.projectId])
@@ -200,6 +221,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       accountProfile: null,
       selectedTopic: null,
       scriptData: null,
+      titleData: null,
       videoAssets: null,
     }))
   }, [])
@@ -212,6 +234,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       accountProfile: null,
       selectedTopic: null,
       scriptData: null,
+      titleData: null,
       videoAssets: null,
     }
     setState(fresh)
@@ -229,6 +252,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
         saveProfile,
         saveTopic,
         saveScript,
+        saveTitle,
         saveVideoAssets,
         proceedToNext,
         goToStep,
