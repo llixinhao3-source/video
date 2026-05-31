@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/store/useAppStore'
 import { getWorkflowDef } from '@/types'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
+import { useBackendStatus } from '@/hooks/useBackendStatus'
 import Sidebar from '@/components/Sidebar'
 
 const API_BASE = import.meta.env.VITE_API_BASE || ''
@@ -23,8 +24,8 @@ import PositioningPanel from '@/components/PositioningPanel'
 import PositioningResult from '@/components/PositioningResult'
 import CategoryPositioningPanel from '@/components/CategoryPositioningPanel'
 import Toast from '@/components/Toast'
-import { motion } from 'motion/react'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
+import { ArrowRight, CheckCircle2, WifiOff, RefreshCw } from 'lucide-react'
 
 const URL_TO_WORKFLOW: Record<string, string> = {
   '/': 'script',
@@ -40,6 +41,42 @@ const URL_TO_WORKFLOW: Record<string, string> = {
   '/boss-helper': 'boss',
   '/resource-management': 'resource',
   '/channel-task': 'channel',
+}
+
+function BackendBanner({ show, onDismiss, onRetry }: { show: boolean; onDismiss: () => void; onRetry: () => void }) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="overflow-hidden"
+        >
+          <div className="flex items-center gap-3 px-4 py-3 bg-[#FFF3E0] border-b border-[#FFE0B2]">
+            <WifiOff className="w-4 h-4 text-[#E65100] flex-shrink-0" />
+            <span className="text-[13px] text-[#E65100] flex-1">
+              后端服务未连接，AI 生成功能暂不可用。请启动本地后端或部署后端服务。
+            </span>
+            <button
+              onClick={onRetry}
+              className="flex items-center gap-1 px-3 py-1 rounded-lg bg-[#E65100]/10 text-[12px] text-[#E65100] font-medium hover:bg-[#E65100]/20 transition-colors"
+            >
+              <RefreshCw className="w-3 h-3" />
+              重试
+            </button>
+            <button
+              onClick={onDismiss}
+              className="text-[#E65100]/60 hover:text-[#E65100] text-[16px] leading-none ml-1"
+            >
+              ×
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
 }
 
 function buildScriptText(sd: Record<string, unknown>): string {
@@ -114,6 +151,10 @@ export default function Workbench() {
   const location = useLocation()
   const navigate = useNavigate()
   const pipeline = useProjectPipeline()
+  const { status: backendStatus, recheck } = useBackendStatus()
+  const [bannerDismissed, setBannerDismissed] = useState(false)
+
+  const showBanner = backendStatus === 'disconnected' && !bannerDismissed
 
   useEffect(() => {
     const targetWorkflow = URL_TO_WORKFLOW[location.pathname]
@@ -123,7 +164,7 @@ export default function Workbench() {
   }, [location.pathname])
 
   useEffect(() => {
-    if (!pipeline.projectId) {
+    if (!pipeline.projectId && backendStatus === 'connected') {
       const initId = async () => {
         try {
           const res = await fetch(`${API_BASE}/api/v1/project/init`, {
@@ -139,7 +180,7 @@ export default function Workbench() {
       }
       initId()
     }
-  }, [pipeline.projectId])
+  }, [pipeline.projectId, backendStatus])
 
   useEffect(() => {
     if (activeWorkflow === 'topic' && pipeline.accountProfile) {
@@ -194,7 +235,7 @@ export default function Workbench() {
   }, [activeWorkflow, pipeline.scriptData, pipeline.accountProfile, pipeline.selectedTopic])
 
   useEffect(() => {
-    if (activeWorkflow === 'boss' && pipeline.projectId) {
+    if (activeWorkflow === 'boss' && pipeline.projectId && backendStatus === 'connected') {
       const fetchReport = async () => {
         try {
           const res = await fetch(`${API_BASE}/api/v1/project/${pipeline.projectId}/context`)
@@ -216,13 +257,13 @@ export default function Workbench() {
             })
             showToast('全链路报告已加载', 'success')
           }
-        } catch (err) {
+        } catch {
           showToast('报告加载失败', 'error')
         }
       }
       fetchReport()
     }
-  }, [activeWorkflow, pipeline.projectId])
+  }, [activeWorkflow, pipeline.projectId, backendStatus])
 
   const handleGoNext = () => {
     const nextPath = pipeline.proceedToNext(activeWorkflow)
@@ -243,6 +284,7 @@ export default function Workbench() {
       <div className="flex h-screen bg-[#F5F5F7]">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
+          <BackendBanner show={showBanner} onDismiss={() => setBannerDismissed(true)} onRetry={recheck} />
           <div className="max-w-[860px] mx-auto px-4 md:px-8 py-6 md:py-8 pt-16 md:pt-8">
             <motion.div
               key="positioning"
@@ -268,6 +310,7 @@ export default function Workbench() {
       <div className="flex h-screen bg-[#F5F5F7]">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
+          <BackendBanner show={showBanner} onDismiss={() => setBannerDismissed(true)} onRetry={recheck} />
           <div className="max-w-[860px] mx-auto px-4 md:px-8 py-6 md:py-8 pt-16 md:pt-8">
             <motion.div
               key="category"
@@ -292,6 +335,7 @@ export default function Workbench() {
       <div className="flex h-screen bg-[#F5F5F7]">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
+          <BackendBanner show={showBanner} onDismiss={() => setBannerDismissed(true)} onRetry={recheck} />
           <div className="max-w-[860px] mx-auto px-4 md:px-8 py-6 md:py-8 pt-16 md:pt-8">
             <motion.div
               key="market"
@@ -332,6 +376,7 @@ export default function Workbench() {
     <div className="flex h-screen bg-[#F5F5F7]">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
+        <BackendBanner show={showBanner} onDismiss={() => setBannerDismissed(true)} onRetry={recheck} />
         <div className="max-w-[860px] mx-auto px-4 md:px-8 py-6 md:py-8 pt-16 md:pt-8">
           <motion.div
             key={activeWorkflow}
