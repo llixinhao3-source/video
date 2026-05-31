@@ -3,12 +3,13 @@ import { useAppStore } from '@/store/useAppStore'
 import { getWorkflowDef } from '@/types'
 import { CheckCircle2, Copy, Check, Play, Film, Image, Mic, Layers, TrendingUp, Target, Users, FileText, Lightbulb, AlertTriangle, Award, BarChart3, Calendar } from 'lucide-react'
 import { useState } from 'react'
+import { getApiBase } from '@/lib/apiBase'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import MarkdownContent from '@/components/MarkdownContent'
 
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -295,7 +296,7 @@ function VideoResultPanel({ data }: { data: Record<string, unknown> }) {
   const aspectRatio = (data.aspect_ratio as string) || '9:16'
   const status = (data.status as string) || 'unknown'
 
-  const fullVideoUrl = videoUrl ? (videoUrl.startsWith('http') ? videoUrl : `${API_BASE}${videoUrl}`) : ''
+  const fullVideoUrl = videoUrl ? (videoUrl.startsWith('http') ? videoUrl : `${getApiBase()}${videoUrl}`) : ''
 
   const stepLabelMap: Record<string, string> = {
     draw_master: '生图大师',

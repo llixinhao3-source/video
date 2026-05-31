@@ -4,7 +4,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { Sparkles, Loader2, Link2, Play, XCircle, ExternalLink } from 'lucide-react'
 import MarkdownContent from '@/components/MarkdownContent'
 
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 interface VideoInfo {
   title: string
@@ -46,7 +46,7 @@ export default function ViralFollowUpPanel() {
     if (!videoUrl.trim()) return
     setIsGenerating(true)
     try {
-      const response = await fetch(`${API_BASE}/api/v1/video/parse`, {
+      const response = await fetch(`${getApiBase()}/api/v1/video/parse`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: videoUrl.trim() }),
@@ -82,7 +82,7 @@ export default function ViralFollowUpPanel() {
     setIsGenerating(true)
     setPhase('generating')
     try {
-      const response = await fetch(`${API_BASE}/api/v1/video/viral_follow_up`, {
+      const response = await fetch(`${getApiBase()}/api/v1/video/viral_follow_up`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

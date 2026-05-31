@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 export type BackendStatus = 'checking' | 'connected' | 'disconnected'
 
@@ -9,9 +8,10 @@ export function useBackendStatus() {
 
   const check = useCallback(async () => {
     try {
+      const base = getApiBase()
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 5000)
-      const res = await fetch(`${API_BASE}/health`, { signal: controller.signal })
+      const res = await fetch(`${base}/health`, { signal: controller.signal })
       clearTimeout(timeout)
       setStatus(res.ok ? 'connected' : 'disconnected')
     } catch {

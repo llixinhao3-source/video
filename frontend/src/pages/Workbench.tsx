@@ -6,7 +6,7 @@ import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 import { useBackendStatus } from '@/hooks/useBackendStatus'
 import Sidebar from '@/components/Sidebar'
 
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase, setApiBase, getApiBaseDisplay } from '@/lib/apiBase'
 import Breadcrumb from '@/components/Breadcrumb'
 import DynamicInputs from '@/components/DynamicInputs'
 import DynamicStyleSelector from '@/components/DynamicStyleSelector'
@@ -25,7 +25,7 @@ import PositioningResult from '@/components/PositioningResult'
 import CategoryPositioningPanel from '@/components/CategoryPositioningPanel'
 import Toast from '@/components/Toast'
 import { motion, AnimatePresence } from 'motion/react'
-import { ArrowRight, CheckCircle2, WifiOff, RefreshCw } from 'lucide-react'
+import { ArrowRight, CheckCircle2, WifiOff, RefreshCw, Settings } from 'lucide-react'
 
 const URL_TO_WORKFLOW: Record<string, string> = {
   '/': 'script',
@@ -44,6 +44,15 @@ const URL_TO_WORKFLOW: Record<string, string> = {
 }
 
 function BackendBanner({ show, onDismiss, onRetry }: { show: boolean; onDismiss: () => void; onRetry: () => void }) {
+  const [editing, setEditing] = useState(false)
+  const [inputVal, setInputVal] = useState(getApiBaseDisplay())
+
+  const handleSave = () => {
+    setApiBase(inputVal)
+    setEditing(false)
+    onRetry()
+  }
+
   return (
     <AnimatePresence>
       {show && (
@@ -54,24 +63,50 @@ function BackendBanner({ show, onDismiss, onRetry }: { show: boolean; onDismiss:
           transition={{ duration: 0.2 }}
           className="overflow-hidden"
         >
-          <div className="flex items-center gap-3 px-4 py-3 bg-[#FFF3E0] border-b border-[#FFE0B2]">
-            <WifiOff className="w-4 h-4 text-[#E65100] flex-shrink-0" />
-            <span className="text-[13px] text-[#E65100] flex-1">
-              后端服务未连接，AI 生成功能暂不可用。请启动本地后端或部署后端服务。
-            </span>
-            <button
-              onClick={onRetry}
-              className="flex items-center gap-1 px-3 py-1 rounded-lg bg-[#E65100]/10 text-[12px] text-[#E65100] font-medium hover:bg-[#E65100]/20 transition-colors"
-            >
-              <RefreshCw className="w-3 h-3" />
-              重试
-            </button>
-            <button
-              onClick={onDismiss}
-              className="text-[#E65100]/60 hover:text-[#E65100] text-[16px] leading-none ml-1"
-            >
-              ×
-            </button>
+          <div className="px-4 py-3 bg-[#FFF3E0] border-b border-[#FFE0B2]">
+            <div className="flex items-center gap-3">
+              <WifiOff className="w-4 h-4 text-[#E65100] flex-shrink-0" />
+              <span className="text-[13px] text-[#E65100] flex-1">
+                后端未连接
+              </span>
+              <button
+                onClick={() => { setEditing(!editing); setInputVal(getApiBaseDisplay()) }}
+                className="flex items-center gap-1 px-3 py-1 rounded-lg bg-[#E65100]/10 text-[12px] text-[#E65100] font-medium hover:bg-[#E65100]/20 transition-colors"
+              >
+                <Settings className="w-3 h-3" />
+                设置
+              </button>
+              <button
+                onClick={onRetry}
+                className="flex items-center gap-1 px-3 py-1 rounded-lg bg-[#E65100]/10 text-[12px] text-[#E65100] font-medium hover:bg-[#E65100]/20 transition-colors"
+              >
+                <RefreshCw className="w-3 h-3" />
+                重试
+              </button>
+              <button
+                onClick={onDismiss}
+                className="text-[#E65100]/60 hover:text-[#E65100] text-[16px] leading-none ml-1"
+              >
+                ×
+              </button>
+            </div>
+            {editing && (
+              <div className="mt-2 flex gap-2">
+                <input
+                  value={inputVal}
+                  onChange={(e) => setInputVal(e.target.value)}
+                  placeholder="例: http://192.168.1.100:8001"
+                  className="flex-1 h-9 px-3 rounded-lg bg-white border border-[#FFE0B2] text-[13px] text-[#1D1D1F] placeholder:text-[#C7C7CC] outline-none focus:border-[#E65100] transition-colors"
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
+                />
+                <button
+                  onClick={handleSave}
+                  className="h-9 px-4 rounded-lg bg-[#E65100] text-white text-[13px] font-medium hover:bg-[#BF360C] active:scale-[0.98] transition-all"
+                >
+                  保存
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
       )}
@@ -167,7 +202,7 @@ export default function Workbench() {
     if (!pipeline.projectId && backendStatus === 'connected') {
       const initId = async () => {
         try {
-          const res = await fetch(`${API_BASE}/api/v1/project/init`, {
+          const res = await fetch(`${getApiBase()}/api/v1/project/init`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({}),
@@ -238,7 +273,7 @@ export default function Workbench() {
     if (activeWorkflow === 'boss' && pipeline.projectId && backendStatus === 'connected') {
       const fetchReport = async () => {
         try {
-          const res = await fetch(`${API_BASE}/api/v1/project/${pipeline.projectId}/context`)
+          const res = await fetch(`${getApiBase()}/api/v1/project/${pipeline.projectId}/context`)
           if (res.ok) {
             const json = await res.json()
             setResult({

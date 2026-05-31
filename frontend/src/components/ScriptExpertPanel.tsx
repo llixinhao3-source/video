@@ -8,8 +8,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 import { useNavigate } from 'react-router-dom'
 import type { AgentDef } from '@/types'
-
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 interface ExpertChainDef {
     key: string
@@ -115,7 +114,7 @@ export default function ScriptExpertPanel() {
         let pid = pipeline.projectId
         if (!pid) {
             try {
-                const res = await fetch(`${API_BASE}/api/v1/project/init`, {
+                const res = await fetch(`${getApiBase()}/api/v1/project/init`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({}),
@@ -148,7 +147,7 @@ export default function ScriptExpertPanel() {
                 body.user_custom_instruction = customInst || '请根据源文件内容进行处理'
             }
 
-            const res = await fetch(`${API_BASE}/api/v1/pipeline/run-expert`, {
+            const res = await fetch(`${getApiBase()}/api/v1/pipeline/run-expert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),

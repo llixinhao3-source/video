@@ -1,8 +1,7 @@
 import { useAppStore } from '@/store/useAppStore'
 import { getWorkflowDef } from '@/types'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
-
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 export function useWorkflowGeneration() {
   const {
@@ -62,7 +61,7 @@ export function useWorkflowGeneration() {
         }
       }
 
-      const url = apiPath.startsWith('http') ? apiPath : `${API_BASE}${apiPath}`
+      const url = apiPath.startsWith('http') ? apiPath : `${getApiBase()}${apiPath}`
 
       const response = await fetch(url, {
         method: 'POST',

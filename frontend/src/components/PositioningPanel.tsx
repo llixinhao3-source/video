@@ -5,7 +5,7 @@ import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, Loader2, User, CheckCircle2, ArrowRight, Lightbulb, Hash, Check } from 'lucide-react'
 
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 type AnalysisMode = 'account' | 'keyword'
 type Phase = 'input' | 'select' | 'deep-analyze' | 'done'
@@ -72,7 +72,7 @@ export default function PositioningPanel() {
         body.keywords = `平台：${platform} | 行业关键词：${keyword}`
       }
 
-      const response = await fetch(`${API_BASE}/api/v1/positioning/analyze`, {
+      const response = await fetch(`${getApiBase()}/api/v1/positioning/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -131,7 +131,7 @@ export default function PositioningPanel() {
     const accountName = mode === 'account' ? ownAccount : keyword
 
     try {
-      const response = await fetch(`${API_BASE}/api/v1/positioning/deep-compare`, {
+      const response = await fetch(`${getApiBase()}/api/v1/positioning/deep-compare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -5,8 +5,7 @@ import {
     Sparkles, Wand2, Plus, Settings, Loader2, FileVideo, FileAudio, AlertCircle,
 } from 'lucide-react'
 import { useAppStore, type AvatarItem } from '@/store/useAppStore'
-
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 const TABS = [
     { key: 'library', icon: '👥', label: '现役数字人库', sub: '增删改查' },
@@ -150,7 +149,7 @@ function LibraryTab({
         }
 
         try {
-            await fetch(`${API_BASE}/api/v1/assets/avatars/${editingId}`, {
+            await fetch(`${getApiBase()}/api/v1/assets/avatars/${editingId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: editName.trim(), voice_type: editVoice }),
@@ -168,7 +167,7 @@ function LibraryTab({
 
     const handleDelete = async (id: string) => {
         try {
-            await fetch(`${API_BASE}/api/v1/assets/avatars/${id}`, { method: 'DELETE' })
+            await fetch(`${getApiBase()}/api/v1/assets/avatars/${id}`, { method: 'DELETE' })
             removeAvatar(id)
             showToast('数字人资产已删除', 'success')
             onRefresh()
@@ -364,7 +363,7 @@ function CloneTab({ onRefresh }: { onRefresh: () => void }) {
             formData.append('voice_type', voiceType)
             if (audioFile) formData.append('voice_audio', audioFile)
 
-            const res = await fetch(`${API_BASE}/api/v1/assets/avatars/clone`, {
+            const res = await fetch(`${getApiBase()}/api/v1/assets/avatars/clone`, {
                 method: 'POST',
                 body: formData,
             })
@@ -576,7 +575,7 @@ function AiTab({ onRefresh }: { onRefresh: () => void }) {
         setAiResult(null)
 
         try {
-            const res = await fetch(`${API_BASE}/api/v1/assets/avatars/text-to-avatar`, {
+            const res = await fetch(`${getApiBase()}/api/v1/assets/avatars/text-to-avatar`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ description: aiDesc.trim(), voice_type: aiVoice }),
@@ -593,7 +592,7 @@ function AiTab({ onRefresh }: { onRefresh: () => void }) {
             const previewUrl = data.avatar_url?.startsWith('http')
                 ? data.avatar_url
                 : data.avatar_url
-                ? `${API_BASE}${data.avatar_url}`
+                ? `${getApiBase()}${data.avatar_url}`
                 : ''
 
             const newAvatar: AvatarItem = {

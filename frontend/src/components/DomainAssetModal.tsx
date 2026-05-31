@@ -6,8 +6,7 @@ import {
     AlertCircle, Sparkles, ChevronDown,
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
-
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 /* ================================================================
    Shared types & helpers
@@ -21,7 +20,7 @@ const DOMAIN_META: Record<string, { label: string; emoji: string; tabs: string[]
 }
 
 function asyncApi(method: string, path: string, body?: unknown) {
-    return fetch(`${API_BASE}${path}`, {
+    return fetch(`${getApiBase()}${path}`, {
         method,
         headers: body != null ? { 'Content-Type': 'application/json' } : undefined,
         body: body != null ? JSON.stringify(body) : undefined,

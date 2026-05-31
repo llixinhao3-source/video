@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { getWorkflowDef, WORKFLOWS } from '@/types'
-
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 export interface AvatarItem {
   id: string
@@ -149,7 +148,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   loadAvatars: async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/assets/avatars`)
+      const res = await fetch(`${getApiBase()}/api/v1/assets/avatars`)
       if (!res.ok) return
       const json = await res.json()
       const list: AvatarItem[] = (json.data || []).map((a: Record<string, unknown>) => ({

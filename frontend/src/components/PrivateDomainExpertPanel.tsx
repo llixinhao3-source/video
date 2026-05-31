@@ -7,8 +7,7 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
-
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 interface FormField {
     field_id: string
@@ -202,7 +201,7 @@ export default function PrivateDomainExpertPanel() {
     const [newOptionInput, setNewOptionInput] = useState<Record<string, string>>({})
 
     useEffect(() => {
-        fetch(`${API_BASE}/api/v1/private-domain/experts`)
+        fetch(`${getApiBase()}/api/v1/private-domain/experts`)
             .then(r => r.json())
             .then(d => {
                 if (d?.data?.length) {
@@ -225,8 +224,8 @@ export default function PrivateDomainExpertPanel() {
         if (!projectId) return
         try {
             const [recRes, colRes] = await Promise.all([
-                fetch(`${API_BASE}/api/v1/private-domain/${expertId}/records?project_id=${projectId}`),
-                fetch(`${API_BASE}/api/v1/private-domain/${expertId}/columns?project_id=${projectId}`),
+                fetch(`${getApiBase()}/api/v1/private-domain/${expertId}/records?project_id=${projectId}`),
+                fetch(`${getApiBase()}/api/v1/private-domain/${expertId}/columns?project_id=${projectId}`),
             ])
             const recData = await recRes.json()
             const colData = await colRes.json()
@@ -248,7 +247,7 @@ export default function PrivateDomainExpertPanel() {
     const syncFieldToBackend = async (eid: string, fieldId: string, updatedField: FormField) => {
         if (!projectId) return
         try {
-            await fetch(`${API_BASE}/api/v1/private-domain/${eid}/fields/${fieldId}`, {
+            await fetch(`${getApiBase()}/api/v1/private-domain/${eid}/fields/${fieldId}`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ project_id: projectId, updates: { options: updatedField.options } }),
             })
@@ -296,7 +295,7 @@ export default function PrivateDomainExpertPanel() {
         const buf = newRecord[eid] || {}
         if (!Object.keys(buf).length) return
         try {
-            const res = await fetch(`${API_BASE}/api/v1/private-domain/${eid}/records`, {
+            const res = await fetch(`${getApiBase()}/api/v1/private-domain/${eid}/records`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ project_id: projectId, record: buf }),
             })
@@ -316,7 +315,7 @@ export default function PrivateDomainExpertPanel() {
         ) : {}
         if (!Object.keys(buf).length) { setEditingRecord(prev => ({ ...prev, [eid]: null })); return }
         try {
-            const res = await fetch(`${API_BASE}/api/v1/private-domain/${eid}/records/${rid}`, {
+            const res = await fetch(`${getApiBase()}/api/v1/private-domain/${eid}/records/${rid}`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ project_id: projectId, updates: buf }),
             })
@@ -334,7 +333,7 @@ export default function PrivateDomainExpertPanel() {
     const handleDeleteRecord = async (eid: string, rid: string) => {
         if (!projectId) return
         try {
-            const res = await fetch(`${API_BASE}/api/v1/private-domain/${eid}/records/${rid}?project_id=${projectId}`, { method: 'DELETE' })
+            const res = await fetch(`${getApiBase()}/api/v1/private-domain/${eid}/records/${rid}?project_id=${projectId}`, { method: 'DELETE' })
             if (!res.ok) throw new Error('删除失败')
             setRecords(prev => ({ ...prev, [eid]: (prev[eid] || []).filter(r => r.id !== rid) }))
             showToast('记录已删除', 'success')
@@ -346,7 +345,7 @@ export default function PrivateDomainExpertPanel() {
         const c = newCol[eid]
         if (!c?.column_id || !c?.title) { showToast('请填写列ID和标题', 'error'); return }
         try {
-            const res = await fetch(`${API_BASE}/api/v1/private-domain/${eid}/columns`, {
+            const res = await fetch(`${getApiBase()}/api/v1/private-domain/${eid}/columns`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ project_id: projectId, column: { ...c, required: false, editable: true } }),
             })
@@ -362,7 +361,7 @@ export default function PrivateDomainExpertPanel() {
     const handleDeleteColumn = async (eid: string, cid: string) => {
         if (!projectId) return
         try {
-            const res = await fetch(`${API_BASE}/api/v1/private-domain/${eid}/columns/${cid}?project_id=${projectId}`, { method: 'DELETE' })
+            const res = await fetch(`${getApiBase()}/api/v1/private-domain/${eid}/columns/${cid}?project_id=${projectId}`, { method: 'DELETE' })
             if (!res.ok) throw new Error('删除列失败')
             setColumns(prev => ({ ...prev, [eid]: (prev[eid] || getColumns(eid)).filter(c => c.column_id !== cid) }))
             setRecords(prev => ({
@@ -377,7 +376,7 @@ export default function PrivateDomainExpertPanel() {
         let pid = projectId
         if (!pid) {
             try {
-                const res = await fetch(`${API_BASE}/api/v1/project/init`, {
+                const res = await fetch(`${getApiBase()}/api/v1/project/init`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({}),
@@ -399,7 +398,7 @@ export default function PrivateDomainExpertPanel() {
             const remark = textareaField ? params[expert.expert_id]?.[textareaField.field_id] || '' : ''
             fd.append('user_custom_instruction', remark)
             fd.append('domain_params_json', JSON.stringify(params[expert.expert_id] || {}))
-            const res = await fetch(`${API_BASE}/api/v1/private-domain/run-expert`, { method: 'POST', body: fd })
+            const res = await fetch(`${getApiBase()}/api/v1/private-domain/run-expert`, { method: 'POST', body: fd })
             if (!res.ok) { const e = await res.json().catch(() => null); throw new Error(e?.detail || `请求失败: ${res.status}`) }
             const json = await res.json()
             updateCard(expert.expert_id, { resultMarkdown: json.output || '', isExpanded: true })

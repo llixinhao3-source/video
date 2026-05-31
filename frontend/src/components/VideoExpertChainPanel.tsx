@@ -8,8 +8,7 @@ import { useAppStore, type AvatarItem } from '@/store/useAppStore'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
 import AvatarCenterModal from '@/components/AvatarCenterModal'
 import DomainAssetModal from '@/components/DomainAssetModal'
-
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 /* ─────────────────────────────────────
    Domain‑specific expert parameters
@@ -158,7 +157,7 @@ function GreenScreenColumn({
         if (!pid) { showToast('项目未初始化', 'error'); updateExpert(expert.key, { isUploading: false }); return }
         try {
             const fd = new FormData(); fd.append('project_id', pid); fd.append('file', file)
-            const res = await fetch(`${API_BASE}/api/v1/video/upload-greenscreen`, { method: 'POST', body: fd })
+            const res = await fetch(`${getApiBase()}/api/v1/video/upload-greenscreen`, { method: 'POST', body: fd })
             if (!res.ok) { const e = await res.json().catch(() => null); throw new Error(e?.detail) }
             const j = await res.json()
             updateExpert(expert.key, { greenScreenPath: j.file_path, isUploading: false })
@@ -413,7 +412,7 @@ export default function VideoExpertChainPanel() {
         let pid = pipeline.projectId
         if (!pid) {
             try {
-                const res = await fetch(`${API_BASE}/api/v1/project/init`, {
+                const res = await fetch(`${getApiBase()}/api/v1/project/init`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({}),
@@ -440,7 +439,7 @@ export default function VideoExpertChainPanel() {
             const dp = buildDomainParamsForAgent(expertDef.key)
             if (Object.keys(dp).length > 0) fd.append('domain_params_json', JSON.stringify(dp))
 
-            const res = await fetch(`${API_BASE}/api/v1/video/run-multimodal-expert`, { method: 'POST', body: fd })
+            const res = await fetch(`${getApiBase()}/api/v1/video/run-multimodal-expert`, { method: 'POST', body: fd })
             if (!res.ok) { const err = await res.json().catch(() => null); throw new Error(err?.detail || `执行失败: ${res.status}`) }
             const json = await res.json()
             updateExpert(expertDef.key, { resultMarkdown: json.output || '', isExpanded: true })
@@ -460,7 +459,7 @@ export default function VideoExpertChainPanel() {
         let pid = pipeline.projectId
         if (!pid) {
             try {
-                const res = await fetch(`${API_BASE}/api/v1/project/init`, {
+                const res = await fetch(`${getApiBase()}/api/v1/project/init`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({}),
@@ -485,7 +484,7 @@ export default function VideoExpertChainPanel() {
 
         setIsRenderingVideo(true)
         try {
-            const res = await fetch(`${API_BASE}/api/v1/video/workflow`, {
+            const res = await fetch(`${getApiBase()}/api/v1/video/workflow`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

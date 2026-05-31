@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
-
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+import { getApiBase } from '@/lib/apiBase'
 
 export const SOP_FLOW = [
   { id: 'positioning', label: '账号定位分析', path: '/account-profile', emoji: '💡' },
@@ -118,7 +117,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
     }))
     const id = state.projectId
     if (id) {
-      fetch(`${API_BASE}/api/v1/project/save-step`, {
+      fetch(`${getApiBase()}/api/v1/project/save-step`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: id, step: 'positioning', data, advance: goNext }),
@@ -135,7 +134,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
     }))
     const id = state.projectId
     if (id) {
-      fetch(`${API_BASE}/api/v1/project/save-step`, {
+      fetch(`${getApiBase()}/api/v1/project/save-step`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: id, step: 'topic_selection', data, advance: goNext }),
@@ -152,7 +151,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
     }))
     const id = state.projectId
     if (id) {
-      fetch(`${API_BASE}/api/v1/project/save-step`, {
+      fetch(`${getApiBase()}/api/v1/project/save-step`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: id, step: 'script_writing', data, advance: goNext }),
@@ -169,7 +168,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
     }))
     const id = state.projectId
     if (id) {
-      fetch(`${API_BASE}/api/v1/project/save-step`, {
+      fetch(`${getApiBase()}/api/v1/project/save-step`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: id, step: 'video_production', data, advance: goNext }),
