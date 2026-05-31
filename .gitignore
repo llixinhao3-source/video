@@ -16,7 +16,6 @@ Thumbs.db
 *.swp
 *.swo
 storage/
-obsidian_output/
 *.mp4
 *.pdf
 *.pptx
