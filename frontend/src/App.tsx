@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { HashRouter as Router, Routes, Route } from "react-router-dom"
 import Workbench from "@/pages/Workbench"
 import { PipelineProvider } from "@/hooks/useProjectPipeline"
 import ErrorBoundary from "@/components/ErrorBoundary"
