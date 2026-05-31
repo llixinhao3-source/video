@@ -1,12 +1,16 @@
 const STORAGE_KEY = 'api_base_url'
+const DEFAULT_BASE = 'https://storm-benjamin-flyer-ross.trycloudflare.com'
 
 function getBuildTimeBase(): string {
-  return import.meta.env.VITE_API_BASE || ''
+  const envBase = import.meta.env.VITE_API_BASE || ''
+  if (envBase && envBase.startsWith('https://')) return envBase
+  return ''
 }
 
 export function getApiBase(): string {
   const runtime = localStorage.getItem(STORAGE_KEY)
-  return runtime || getBuildTimeBase()
+  if (runtime) return runtime
+  return getBuildTimeBase() || DEFAULT_BASE
 }
 
 export function setApiBase(url: string): void {
@@ -18,5 +22,5 @@ export function setApiBase(url: string): void {
 }
 
 export function getApiBaseDisplay(): string {
-  return localStorage.getItem(STORAGE_KEY) || getBuildTimeBase() || '(未设置)'
+  return localStorage.getItem(STORAGE_KEY) || getBuildTimeBase() || DEFAULT_BASE
 }
