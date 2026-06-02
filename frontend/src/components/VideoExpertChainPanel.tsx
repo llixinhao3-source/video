@@ -468,6 +468,7 @@ export default function VideoExpertChainPanel() {
     const [soraOrientation, setSoraOrientation] = useState<'portrait' | 'landscape'>('portrait')
     const [soraSize, setSoraSize] = useState<'small' | 'large'>('small')
     const [soraDuration, setSoraDuration] = useState(10)
+    const [soraModel, setSoraModel] = useState<'sora-2' | 'sora-2-all'>('sora-2-all')
     const [isSoraCreating, setIsSoraCreating] = useState(false)
     const [isSoraPolling, setIsSoraPolling] = useState(false)
     const [soraTaskId, setSoraTaskId] = useState<string | null>(null)
@@ -483,6 +484,7 @@ export default function VideoExpertChainPanel() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     prompt: soraPrompt,
+                    model: soraModel,
                     orientation: soraOrientation,
                     duration: soraDuration,
                     size: soraSize,
@@ -821,7 +823,7 @@ export default function VideoExpertChainPanel() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-4 gap-3">
                             <div>
                                 <label className="text-[11px] font-medium text-[#86868B] mb-1.5 block">画面方向</label>
                                 <div className="flex gap-1.5">
@@ -873,6 +875,27 @@ export default function VideoExpertChainPanel() {
                                 >
                                     <option value={10}>10 秒</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label className="text-[11px] font-medium text-[#86868B] mb-1.5 block">模型</label>
+                                <div className="flex gap-1.5">
+                                    <button
+                                        onClick={() => setSoraModel('sora-2')}
+                                        className={`flex-1 py-2.5 rounded-xl text-[11px] font-medium border transition-all duration-200 ${
+                                            soraModel === 'sora-2' ? 'border-[#5856D6]/40 bg-[#5856D6]/8 text-[#5856D6]' : 'border-slate-100 bg-white text-[#86868B]'
+                                        }`}
+                                    >
+                                        Sora-2
+                                    </button>
+                                    <button
+                                        onClick={() => setSoraModel('sora-2-all')}
+                                        className={`flex-1 py-2.5 rounded-xl text-[11px] font-medium border transition-all duration-200 ${
+                                            soraModel === 'sora-2-all' ? 'border-[#5856D6]/40 bg-[#5856D6]/8 text-[#5856D6]' : 'border-slate-100 bg-white text-[#86868B]'
+                                        }`}
+                                    >
+                                        Sora-2-All
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

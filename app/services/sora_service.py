@@ -19,6 +19,7 @@ def _init_storage() -> None:
 
 async def create_sora_video(
     prompt: str,
+    model: str = "sora-2-all",
     orientation: str = "portrait",
     duration: int = 10,
     size: str = "small",
@@ -39,7 +40,7 @@ async def create_sora_video(
         "Accept": "application/json",
     }
     payload: dict[str, Any] = {
-        "model": settings.sora_model,
+        "model": model,
         "prompt": prompt,
         "orientation": orientation,
         "duration": duration,
@@ -49,7 +50,7 @@ async def create_sora_video(
         "images": images or [],
     }
 
-    logger.info("Creating Sora video | model=%s | orientation=%s | duration=%d", settings.sora_model, orientation, duration)
+    logger.info("Creating Sora video | model=%s | orientation=%s | duration=%d", model, orientation, duration)
 
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(url, json=payload, headers=headers)

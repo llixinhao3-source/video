@@ -266,6 +266,7 @@ async def read_multimodal_file(project_id: str, file_name: str):
 
 class SoraCreateRequest(BaseModel):
     prompt: str = Field(..., description="视频生成提示词")
+    model: str = Field("sora-2-all", description="模型: sora-2 / sora-2-all")
     orientation: str = Field("portrait", description="portrait 竖屏 / landscape 横屏")
     duration: int = Field(10, description="视频时长，支持 10")
     size: str = Field("small", description="small 720p / large 1080p")
@@ -279,6 +280,7 @@ async def sora_create(req: SoraCreateRequest):
     try:
         result = await create_sora_video(
             prompt=req.prompt,
+            model=req.model,
             orientation=req.orientation,
             duration=req.duration,
             size=req.size,

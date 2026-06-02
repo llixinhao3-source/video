@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     sora_api_key: str = ""
     sora_api_base: str = "https://api.vectorengine.ai/v1"
-    sora_model: str = "sora-2"
+    sora_model: str = "sora-2-all"
 
     feishu_app_id: str = ""
     feishu_app_secret: str = ""
