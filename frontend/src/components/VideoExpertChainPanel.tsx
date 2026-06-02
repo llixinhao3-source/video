@@ -874,6 +874,7 @@ export default function VideoExpertChainPanel() {
                                     className="w-full h-[38px] pl-3 pr-8 rounded-xl border border-slate-200 bg-white text-[12px] text-[#1D1D1F] outline-none focus:border-[#5856D6]/30 appearance-none cursor-pointer"
                                 >
                                     <option value={10}>10 秒</option>
+                                    <option value={15}>15 秒</option>
                                 </select>
                             </div>
                             <div>
