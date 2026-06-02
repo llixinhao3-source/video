@@ -33,7 +33,7 @@ async def create_sora_video(
     if not api_key:
         raise ValueError("sora_api_key 未配置，请在 .env 中设置 SORA_API_KEY")
 
-    url = f"{base_url}/video/create"
+    url = f"{base_url}/video/generations"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
@@ -77,7 +77,7 @@ async def check_sora_status(task_id: str) -> dict[str, Any]:
     if not api_key:
         raise ValueError("sora_api_key 未配置")
 
-    url = f"{base_url}/video/{task_id}"
+    url = f"{base_url}/video/generations/{task_id}"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Accept": "application/json",
