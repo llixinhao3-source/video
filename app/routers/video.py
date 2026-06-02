@@ -6,11 +6,13 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from app.config import settings
 from app.services.video_engine import execute_video_workflow
 from app.services.video_multimodal_engine import multimodal_engine, VIDEO_AGENT_PRESETS, VIDEO_AGENT_FILE_CHAIN
+from app.services.sora_service import create_sora_video, check_sora_status, poll_sora_until_done, download_sora_video, SORA_VIDEO_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -256,3 +258,96 @@ async def read_multimodal_file(project_id: str, file_name: str):
         return {"project_id": project_id, "file_name": file_name, "content": content}
     except Exception:
         raise HTTPException(status_code=404, detail=f"File not found: {file_name}")
+
+
+# ──────────────────────────────────────────────
+# Sora-2 视频生成 API
+# ──────────────────────────────────────────────
+
+class SoraCreateRequest(BaseModel):
+    prompt: str = Field(..., description="视频生成提示词")
+    orientation: str = Field("portrait", description="portrait 竖屏 / landscape 横屏")
+    duration: int = Field(10, description="视频时长，支持 10")
+    size: str = Field("small", description="small 720p / large 1080p")
+    watermark: bool = Field(False, description="是否带水印")
+    private: bool = Field(True, description="是否隐藏视频")
+    images: list[str] = Field(default_factory=list, description="参考图片链接列表")
+
+
+@router.post("/sora-create")
+async def sora_create(req: SoraCreateRequest):
+    try:
+        result = await create_sora_video(
+            prompt=req.prompt,
+            orientation=req.orientation,
+            duration=req.duration,
+            size=req.size,
+            watermark=req.watermark,
+            private=req.private,
+            images=req.images,
+        )
+        return {"success": True, "data": result}
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("Sora create failed")
+        raise HTTPException(status_code=500, detail="Sora 视频创建失败") from e
+
+
+@router.get("/sora-status/{task_id}")
+async def sora_status(task_id: str):
+    try:
+        result = await check_sora_status(task_id)
+        return {"success": True, "data": result}
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("Sora status check failed for %s", task_id)
+        raise HTTPException(status_code=500, detail="状态查询失败") from e
+
+
+class SoraDownloadRequest(BaseModel):
+    task_id: str = Field(..., description="Sora 任务 ID")
+
+
+@router.post("/sora-download")
+async def sora_download(req: SoraDownloadRequest):
+    try:
+        status_result = await poll_sora_until_done(req.task_id, max_wait=600, interval=10)
+        video_url = status_result.get("video_url") or status_result.get("url")
+        if not video_url:
+            choices = status_result.get("choices", [])
+            if choices:
+                video_url = choices[0].get("url", "")
+        if not video_url:
+            raise ValueError("视频生成完成但未返回视频链接")
+
+        local_path = await download_sora_video(video_url)
+        filename = Path(local_path).name
+        return {
+            "success": True,
+            "data": {
+                "local_path": local_path,
+                "filename": filename,
+                "download_url": f"/api/v1/video/sora-file/{filename}",
+            },
+        }
+    except TimeoutError as e:
+        raise HTTPException(status_code=408, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("Sora download failed for %s", req.task_id)
+        raise HTTPException(status_code=500, detail="视频下载失败") from e
+
+
+@router.get("/sora-file/{filename}")
+async def serve_sora_file(filename: str):
+    filepath = SORA_VIDEO_DIR / filename
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail="文件不存在")
+    return FileResponse(
+        path=str(filepath),
+        media_type="video/mp4",
+        filename=filename,
+    )

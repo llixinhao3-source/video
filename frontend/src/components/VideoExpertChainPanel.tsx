@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import {
     Play, Loader2, CheckCircle2, ChevronDown, ChevronUp,
     Copy, Check, Sparkles, Upload, FileVideo, User, Settings, Clock, Film, ArrowRight,
+    Download, MonitorPlay, Smartphone, Tv,
 } from 'lucide-react'
 import { useAppStore, type AvatarItem } from '@/store/useAppStore'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
@@ -455,6 +456,159 @@ export default function VideoExpertChainPanel() {
     const [isRenderingVideo, setIsRenderingVideo] = useState(false)
     const [videoResult, setVideoResult] = useState<{video_url?: string; status?: string} | null>(null)
 
+    /* ── Sora-2 视频生成 ── */
+    const [soraPrompt, setSoraPrompt] = useState(() => {
+        const sd = pipeline.scriptData as Record<string, unknown> | null
+        if (sd) {
+            const body = (sd.body_content as string) || (sd.script as string) || ''
+            if (body) return body.slice(0, 800)
+        }
+        return ''
+    })
+    const [soraOrientation, setSoraOrientation] = useState<'portrait' | 'landscape'>('portrait')
+    const [soraSize, setSoraSize] = useState<'small' | 'large'>('small')
+    const [soraDuration, setSoraDuration] = useState(10)
+    const [isSoraCreating, setIsSoraCreating] = useState(false)
+    const [isSoraPolling, setIsSoraPolling] = useState(false)
+    const [soraTaskId, setSoraTaskId] = useState<string | null>(null)
+    const [soraVideoResult, setSoraVideoResult] = useState<{video_url?: string; download_url?: string; filename?: string} | null>(null)
+
+    const handleSoraCreate = async () => {
+        if (!soraPrompt.trim()) return
+        setIsSoraCreating(true)
+        setSoraVideoResult(null)
+        try {
+            const res = await fetch(`${getApiBase()}/api/v1/video/sora-create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: soraPrompt,
+                    orientation: soraOrientation,
+                    duration: soraDuration,
+                    size: soraSize,
+                    watermark: false,
+                    private: true,
+                }),
+            })
+            if (!res.ok) {
+                const err = await res.json().catch(() => null)
+                throw new Error(err?.detail || `创建失败: ${res.status}`)
+            }
+            const json = await res.json()
+            const taskId = json.data?.task_id
+            if (taskId) {
+                setSoraTaskId(taskId)
+                showToast('视频生成任务已提交，请等待生成完成', 'success')
+                startSoraPolling(taskId)
+            }
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : '创建失败', 'error')
+        } finally {
+            setIsSoraCreating(false)
+        }
+    }
+
+    const startSoraPolling = (taskId: string) => {
+        let attempts = 0
+        const maxAttempts = 60
+        const poll = async () => {
+            if (attempts >= maxAttempts) {
+                showToast('视频生成超时，请稍后手动查询状态', 'error')
+                return
+            }
+            attempts++
+            try {
+                const res = await fetch(`${getApiBase()}/api/v1/video/sora-status/${taskId}`)
+                if (!res.ok) return
+                const json = await res.json()
+                const status = json.data?.status
+                if (status === 'completed' || status === 'succeeded' || status === 'done' || status === 'success') {
+                    const videoUrl = json.data?.video_url || json.data?.url || (json.data?.choices?.[0]?.url)
+                    if (videoUrl) {
+                        try {
+                            const dlRes = await fetch(`${getApiBase()}/api/v1/video/sora-download`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ task_id: taskId }),
+                            })
+                            if (dlRes.ok) {
+                                const dlJson = await dlRes.json()
+                                setSoraVideoResult({
+                                    video_url: videoUrl,
+                                    download_url: dlJson.data?.download_url,
+                                    filename: dlJson.data?.filename,
+                                })
+                            } else {
+                                setSoraVideoResult({ video_url: videoUrl })
+                            }
+                        } catch {
+                            setSoraVideoResult({ video_url: videoUrl })
+                        }
+                        setSoraTaskId(null)
+                        pipeline.markStepCompleted('video')
+                        showToast('视频生成成功！已保存到服务器', 'success')
+                        return
+                    }
+                }
+                if (status === 'failed' || status === 'error') {
+                    setSoraTaskId(null)
+                    showToast('视频生成失败，请重试', 'error')
+                    return
+                }
+                setTimeout(poll, 10000)
+            } catch {
+                setTimeout(poll, 10000)
+            }
+        }
+        setTimeout(poll, 5000)
+    }
+
+    const handleSoraPoll = async () => {
+        if (!soraTaskId) return
+        setIsSoraPolling(true)
+        try {
+            const res = await fetch(`${getApiBase()}/api/v1/video/sora-status/${soraTaskId}`)
+            if (!res.ok) {
+                const err = await res.json().catch(() => null)
+                throw new Error(err?.detail || `查询失败: ${res.status}`)
+            }
+            const json = await res.json()
+            const status = json.data?.status
+            showToast(`当前状态: ${status}`, 'success')
+            if (status === 'completed' || status === 'succeeded' || status === 'done' || status === 'success') {
+                const videoUrl = json.data?.video_url || json.data?.url || (json.data?.choices?.[0]?.url)
+                if (videoUrl) {
+                    try {
+                        const dlRes = await fetch(`${getApiBase()}/api/v1/video/sora-download`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ task_id: soraTaskId }),
+                        })
+                        if (dlRes.ok) {
+                            const dlJson = await dlRes.json()
+                            setSoraVideoResult({
+                                video_url: videoUrl,
+                                download_url: dlJson.data?.download_url,
+                                filename: dlJson.data?.filename,
+                            })
+                        } else {
+                            setSoraVideoResult({ video_url: videoUrl })
+                        }
+                    } catch {
+                        setSoraVideoResult({ video_url: videoUrl })
+                    }
+                    setSoraTaskId(null)
+                    pipeline.markStepCompleted('video')
+                    showToast('视频生成成功！已保存到服务器', 'success')
+                }
+            }
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : '查询失败', 'error')
+        } finally {
+            setIsSoraPolling(false)
+        }
+    }
+
     const generateVideo = async () => {
         let pid = pipeline.projectId
         if (!pid) {
@@ -639,6 +793,168 @@ export default function VideoExpertChainPanel() {
                         </motion.div>
                     )
                 })}
+            </div>
+
+            {/* ── Sora-2 AI 视频生成 ── */}
+            <div className="mt-6 space-y-4">
+                <div className="rounded-2xl border border-[#5856D6]/20 bg-gradient-to-br from-[#5856D6]/5 to-[#AF52DE]/5 p-5">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-[#5856D6]/15 flex items-center justify-center">
+                            <MonitorPlay className="w-5 h-5 text-[#5856D6]" />
+                        </div>
+                        <div>
+                            <h3 className="text-[14px] font-semibold text-[#1D1D1F]">Sora-2 AI 视频生成</h3>
+                            <p className="text-[11px] text-[#86868B]">基于文案内容，AI 自动生成视频并保存到本地</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <div>
+                            <label className="text-[11px] font-medium text-[#86868B] mb-1.5 block">视频提示词</label>
+                            <textarea
+                                value={soraPrompt}
+                                onChange={(e) => setSoraPrompt(e.target.value)}
+                                placeholder="描述你想要生成的视频内容，系统会自动从文案中提取关键信息..."
+                                rows={3}
+                                disabled={isSoraCreating}
+                                className="w-full px-4 py-3 rounded-xl border border-black/[0.06] bg-white text-[13px] text-[#1D1D1F] placeholder:text-[#C7C7CC] resize-none outline-none focus:border-[#5856D6]/30 focus:ring-[3px] focus:ring-[#5856D6]/8 transition-all duration-200"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <label className="text-[11px] font-medium text-[#86868B] mb-1.5 block">画面方向</label>
+                                <div className="flex gap-1.5">
+                                    <button
+                                        onClick={() => setSoraOrientation('portrait')}
+                                        className={`flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-medium border transition-all duration-200 ${
+                                            soraOrientation === 'portrait' ? 'border-[#5856D6]/40 bg-[#5856D6]/8 text-[#5856D6]' : 'border-slate-100 bg-white text-[#86868B]'
+                                        }`}
+                                    >
+                                        <Smartphone className="w-3 h-3" />竖屏
+                                    </button>
+                                    <button
+                                        onClick={() => setSoraOrientation('landscape')}
+                                        className={`flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-medium border transition-all duration-200 ${
+                                            soraOrientation === 'landscape' ? 'border-[#5856D6]/40 bg-[#5856D6]/8 text-[#5856D6]' : 'border-slate-100 bg-white text-[#86868B]'
+                                        }`}
+                                    >
+                                        <Tv className="w-3 h-3" />横屏
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[11px] font-medium text-[#86868B] mb-1.5 block">视频画质</label>
+                                <div className="flex gap-1.5">
+                                    <button
+                                        onClick={() => setSoraSize('small')}
+                                        className={`flex-1 py-2.5 rounded-xl text-[11px] font-medium border transition-all duration-200 ${
+                                            soraSize === 'small' ? 'border-[#5856D6]/40 bg-[#5856D6]/8 text-[#5856D6]' : 'border-slate-100 bg-white text-[#86868B]'
+                                        }`}
+                                    >
+                                        720p
+                                    </button>
+                                    <button
+                                        onClick={() => setSoraSize('large')}
+                                        className={`flex-1 py-2.5 rounded-xl text-[11px] font-medium border transition-all duration-200 ${
+                                            soraSize === 'large' ? 'border-[#5856D6]/40 bg-[#5856D6]/8 text-[#5856D6]' : 'border-slate-100 bg-white text-[#86868B]'
+                                        }`}
+                                    >
+                                        1080p
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[11px] font-medium text-[#86868B] mb-1.5 block">时长</label>
+                                <select
+                                    value={soraDuration}
+                                    onChange={(e) => setSoraDuration(Number(e.target.value))}
+                                    className="w-full h-[38px] pl-3 pr-8 rounded-xl border border-slate-200 bg-white text-[12px] text-[#1D1D1F] outline-none focus:border-[#5856D6]/30 appearance-none cursor-pointer"
+                                >
+                                    <option value={10}>10 秒</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleSoraCreate}
+                                disabled={isSoraCreating || !soraPrompt.trim()}
+                                className={`flex-1 h-[44px] rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 transition-all duration-200 ${
+                                    isSoraCreating
+                                        ? 'bg-[#5856D6]/10 text-[#5856D6] cursor-not-allowed'
+                                        : !soraPrompt.trim()
+                                        ? 'bg-[#E5E5EA] text-[#C7C7CC] cursor-not-allowed'
+                                        : 'bg-[#5856D6] text-white hover:bg-[#4A48C4] active:scale-[0.98]'
+                                }`}
+                            >
+                                {isSoraCreating ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin" /> 生成中...</>
+                                ) : (
+                                    <><Film className="w-4 h-4" /> AI 生成视频</>
+                                )}
+                            </button>
+                        </div>
+
+                        {soraTaskId && (
+                            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#5856D6]/5 border border-[#5856D6]/10">
+                                <Loader2 className="w-3.5 h-3.5 text-[#5856D6] animate-spin" />
+                                <span className="text-[12px] text-[#5856D6]">任务 {soraTaskId} 生成中，请稍候...</span>
+                                <button
+                                    onClick={handleSoraPoll}
+                                    disabled={isSoraPolling}
+                                    className="ml-auto px-2.5 py-1 rounded-lg bg-[#5856D6]/10 text-[11px] text-[#5856D6] font-medium hover:bg-[#5856D6]/20 transition-colors"
+                                >
+                                    {isSoraPolling ? '查询中...' : '查询状态'}
+                                </button>
+                            </div>
+                        )}
+
+                        {soraVideoResult && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="rounded-xl bg-[#F0FFF4] border border-[#34C759]/20 overflow-hidden"
+                            >
+                                <div className="flex items-center gap-2 px-4 py-3">
+                                    <CheckCircle2 className="w-4 h-4 text-[#34C759]" />
+                                    <span className="text-[13px] font-medium text-[#1D1D1F]">视频生成成功</span>
+                                </div>
+                                {soraVideoResult.video_url && (
+                                    <div className="px-4 pb-2">
+                                        <video
+                                            src={soraVideoResult.video_url}
+                                            controls
+                                            className="w-full rounded-lg bg-black"
+                                            style={{ maxHeight: '320px' }}
+                                        />
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-2 px-4 pb-3">
+                                    {soraVideoResult.download_url && (
+                                        <a
+                                            href={`${getApiBase()}${soraVideoResult.download_url}`}
+                                            download
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1D1D1F] text-white text-[11px] font-medium hover:bg-[#333338] active:scale-[0.97] transition-all duration-200"
+                                        >
+                                            <Download className="w-3 h-3" /> 保存到本地
+                                        </a>
+                                    )}
+                                    {soraVideoResult.video_url && (
+                                        <a
+                                            href={soraVideoResult.video_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-100 text-[11px] text-[#007AFF] font-medium hover:bg-[#007AFF]/5 transition-colors"
+                                        >
+                                            新窗口打开
+                                        </a>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* ── 全局生成视频按钮 ── */}
