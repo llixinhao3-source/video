@@ -14,13 +14,17 @@ class Settings(BaseSettings):
     VIDEO_API_BASE: str = "https://api.vectorengine.ai/v1"
     VIDEO_MODEL: str = "gpt-5.5-pro"
 
+    SORA_API_KEY: str = ""
+    SORA_API_BASE: str = "https://api.vectorengine.ai/v1"
+    SORA_MODEL: str = "sora-2"
+
     FEISHU_APP_ID: str = ""
     FEISHU_APP_SECRET: str = ""
     FEISHU_BASE_URL: str = "https://open.feishu.cn/open-apis"
 
     OBSIDIAN_VAULT_PATH: str = ""
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()
