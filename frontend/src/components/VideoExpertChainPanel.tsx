@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import {
     Play, Loader2, CheckCircle2, ChevronDown, ChevronUp,
     Copy, Check, Sparkles, Upload, FileVideo, User, Settings, Clock, Film, ArrowRight,
-    Download, MonitorPlay, Smartphone, Tv,
+    Download, MonitorPlay, Smartphone, Tv, Trash2, Edit3, Save, X, History, Search,
 } from 'lucide-react'
 import { useAppStore, type AvatarItem } from '@/store/useAppStore'
 import { useProjectPipeline } from '@/hooks/useProjectPipeline'
@@ -474,6 +474,99 @@ export default function VideoExpertChainPanel() {
     const [soraTaskId, setSoraTaskId] = useState<string | null>(null)
     const [soraTaskModel, setSoraTaskModel] = useState<string>('wan2.6-i2v-flash')
     const [soraVideoResult, setSoraVideoResult] = useState<{video_url?: string; download_url?: string; filename?: string} | null>(null)
+
+    // ── 视频历史 ──
+    interface VideoHistoryItem {
+        id: string
+        filename: string
+        prompt: string
+        model: string
+        duration: number
+        aspect_ratio: string
+        created_at: string
+        local_path: string
+        title: string
+        tags: string[]
+    }
+    const [videoHistory, setVideoHistory] = useState<VideoHistoryItem[]>([])
+    const [showHistory, setShowHistory] = useState(false)
+    const [editingVideo, setEditingVideo] = useState<VideoHistoryItem | null>(null)
+    const [editTitle, setEditTitle] = useState('')
+    const [editTags, setEditTags] = useState('')
+    const [historySearch, setHistorySearch] = useState('')
+
+    const fetchVideoHistory = useCallback(async () => {
+        try {
+            const res = await fetch(`${getApiBase()}/api/v1/video/history?page=1&page_size=50`)
+            if (res.ok) {
+                const json = await res.json()
+                setVideoHistory(json.data?.items || [])
+            }
+        } catch {}
+    }, [])
+
+    useEffect(() => { fetchVideoHistory() }, [fetchVideoHistory])
+
+    const handleSaveToHistory = async () => {
+        if (!soraVideoResult?.download_url) return
+        try {
+            const res = await fetch(`${getApiBase()}/api/v1/video/history/save`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    filename: soraVideoResult.filename,
+                    prompt: soraPrompt,
+                    model: soraModel,
+                    duration: soraDuration,
+                    aspect_ratio: soraOrientation === 'portrait' ? '9:16' : '16:9',
+                    title: soraPrompt.slice(0, 30),
+                }),
+            })
+            if (res.ok) {
+                showToast('视频已保存到历史记录', 'success')
+                fetchVideoHistory()
+            }
+        } catch {
+            showToast('保存失败', 'error')
+        }
+    }
+
+    const handleDeleteVideo = async (id: string) => {
+        try {
+            const res = await fetch(`${getApiBase()}/api/v1/video/history/${id}`, { method: 'DELETE' })
+            if (res.ok) {
+                showToast('视频已删除', 'success')
+                fetchVideoHistory()
+            }
+        } catch {
+            showToast('删除失败', 'error')
+        }
+    }
+
+    const handleUpdateVideo = async () => {
+        if (!editingVideo) return
+        try {
+            const res = await fetch(`${getApiBase()}/api/v1/video/history/${editingVideo.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: editTitle,
+                    tags: editTags.split(',').map(t => t.trim()).filter(Boolean),
+                }),
+            })
+            if (res.ok) {
+                showToast('视频信息已更新', 'success')
+                setEditingVideo(null)
+                fetchVideoHistory()
+            }
+        } catch {
+            showToast('更新失败', 'error')
+        }
+    }
+
+    const filteredHistory = videoHistory.filter(v =>
+        !historySearch || v.title?.includes(historySearch) || v.prompt?.includes(historySearch) || v.model?.includes(historySearch)
+    )
 
     const SORA_DURATION_MAP: Record<string, number[]> = {
         'sora-2-pro': [4, 8, 12],
@@ -986,6 +1079,12 @@ export default function VideoExpertChainPanel() {
                                             <Download className="w-3 h-3" /> 保存到本地
                                         </a>
                                     )}
+                                    <button
+                                        onClick={handleSaveToHistory}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#5856D6] text-white text-[11px] font-medium hover:bg-[#4B49B8] active:scale-[0.97] transition-all duration-200"
+                                    >
+                                        <Save className="w-3 h-3" /> 保存到历史
+                                    </button>
                                     {soraVideoResult.video_url && (
                                         <a
                                             href={soraVideoResult.video_url}
@@ -1001,6 +1100,152 @@ export default function VideoExpertChainPanel() {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* ── 视频历史面板 ── */}
+            <div className="mt-4">
+                <button
+                    onClick={() => { setShowHistory(!showHistory); if (!showHistory) fetchVideoHistory() }}
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white border border-slate-100 hover:border-[#5856D6]/20 transition-colors"
+                >
+                    <div className="flex items-center gap-2">
+                        <History className="w-4 h-4 text-[#5856D6]" />
+                        <span className="text-[13px] font-medium text-[#1D1D1F]">视频历史记录</span>
+                        {videoHistory.length > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-md bg-[#5856D6]/10 text-[10px] font-medium text-[#5856D6]">{videoHistory.length}</span>
+                        )}
+                    </div>
+                    {showHistory ? <ChevronUp className="w-4 h-4 text-[#86868B]" /> : <ChevronDown className="w-4 h-4 text-[#86868B]" />}
+                </button>
+
+                <AnimatePresence>
+                    {showHistory && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="mt-2 space-y-3">
+                                {/* 搜索栏 */}
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#86868B]" />
+                                    <input
+                                        value={historySearch}
+                                        onChange={e => setHistorySearch(e.target.value)}
+                                        placeholder="搜索视频..."
+                                        className="w-full h-[36px] pl-9 pr-3 rounded-xl border border-slate-200 bg-white text-[12px] text-[#1D1D1F] outline-none focus:border-[#5856D6]/30"
+                                    />
+                                </div>
+
+                                {filteredHistory.length === 0 ? (
+                                    <div className="py-8 text-center text-[12px] text-[#86868B]">
+                                        {videoHistory.length === 0 ? '暂无历史视频' : '没有匹配的结果'}
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                                        {filteredHistory.map(v => (
+                                            <div key={v.id} className="rounded-xl bg-white border border-slate-100 overflow-hidden hover:border-[#5856D6]/20 transition-colors">
+                                                <div className="flex gap-3 p-3">
+                                                    {/* 视频预览 */}
+                                                    <div className="w-20 h-28 flex-shrink-0 rounded-lg bg-black overflow-hidden">
+                                                        <video
+                                                            src={`${getApiBase()}/api/v1/video/sora-file/${v.filename}`}
+                                                            className="w-full h-full object-cover"
+                                                            muted
+                                                            onMouseOver={e => (e.target as HTMLVideoElement).play()}
+                                                            onMouseOut={e => { const el = e.target as HTMLVideoElement; el.pause(); el.currentTime = 0 }}
+                                                        />
+                                                    </div>
+                                                    {/* 信息 */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-[12px] font-medium text-[#1D1D1F] truncate">{v.title || v.prompt?.slice(0, 30)}</p>
+                                                        <p className="text-[10px] text-[#86868B] mt-1 line-clamp-2">{v.prompt}</p>
+                                                        <div className="flex items-center gap-2 mt-2">
+                                                            <span className="px-1.5 py-0.5 rounded bg-[#5856D6]/10 text-[9px] font-medium text-[#5856D6]">{v.model}</span>
+                                                            <span className="text-[10px] text-[#86868B]">{v.duration}s</span>
+                                                            <span className="text-[10px] text-[#86868B]">{v.aspect_ratio}</span>
+                                                        </div>
+                                                        {v.tags?.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1 mt-1.5">
+                                                                {v.tags.map(tag => (
+                                                                    <span key={tag} className="px-1.5 py-0.5 rounded bg-slate-100 text-[9px] text-[#86868B]">{tag}</span>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        <p className="text-[9px] text-[#C7C7CC] mt-1.5">{new Date(v.created_at).toLocaleString('zh-CN')}</p>
+                                                    </div>
+                                                    {/* 操作按钮 */}
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <a
+                                                            href={`${getApiBase()}/api/v1/video/sora-file/${v.filename}`}
+                                                            download
+                                                            className="p-1.5 rounded-lg bg-[#1D1D1F] text-white hover:bg-[#333338] transition-colors"
+                                                            title="下载"
+                                                        >
+                                                            <Download className="w-3 h-3" />
+                                                        </a>
+                                                        <button
+                                                            onClick={() => { setEditingVideo(v); setEditTitle(v.title || ''); setEditTags(v.tags?.join(', ') || '') }}
+                                                            className="p-1.5 rounded-lg bg-[#007AFF]/10 text-[#007AFF] hover:bg-[#007AFF]/20 transition-colors"
+                                                            title="编辑"
+                                                        >
+                                                            <Edit3 className="w-3 h-3" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteVideo(v.id)}
+                                                            className="p-1.5 rounded-lg bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20 transition-colors"
+                                                            title="删除"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* 编辑弹窗 */}
+                                <AnimatePresence>
+                                    {editingVideo && (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
+                                            onClick={() => setEditingVideo(null)}
+                                        >
+                                            <motion.div
+                                                initial={{ scale: 0.95 }}
+                                                animate={{ scale: 1 }}
+                                                exit={{ scale: 0.95 }}
+                                                onClick={e => e.stopPropagation()}
+                                                className="bg-white rounded-2xl p-5 w-[360px] shadow-xl"
+                                            >
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <h3 className="text-[14px] font-semibold text-[#1D1D1F]">编辑视频信息</h3>
+                                                    <button onClick={() => setEditingVideo(null)} className="p-1 rounded-lg hover:bg-slate-100"><X className="w-4 h-4 text-[#86868B]" /></button>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <label className="text-[11px] font-medium text-[#86868B] mb-1 block">标题</label>
+                                                        <input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full h-[36px] px-3 rounded-xl border border-slate-200 text-[12px] outline-none focus:border-[#5856D6]/30" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[11px] font-medium text-[#86868B] mb-1 block">标签（逗号分隔）</label>
+                                                        <input value={editTags} onChange={e => setEditTags(e.target.value)} placeholder="例如：猫, 可爱, 阳光" className="w-full h-[36px] px-3 rounded-xl border border-slate-200 text-[12px] outline-none focus:border-[#5856D6]/30" />
+                                                    </div>
+                                                    <button onClick={handleUpdateVideo} className="w-full h-[40px] rounded-xl bg-[#5856D6] text-white text-[13px] font-medium hover:bg-[#4B49B8] active:scale-[0.98] transition-all">保存修改</button>
+                                                </div>
+                                            </motion.div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* ── 全局生成视频按钮 ── */}

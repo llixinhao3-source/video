@@ -13,6 +13,7 @@ from app.config import settings
 from app.services.video_engine import execute_video_workflow
 from app.services.video_multimodal_engine import multimodal_engine, VIDEO_AGENT_PRESETS, VIDEO_AGENT_FILE_CHAIN
 from app.services.sora_service import create_sora_video, check_sora_status, poll_sora_until_done, download_sora_video, SORA_VIDEO_DIR, MODEL_DURATION_OPTIONS, MODEL_ASPECT_RATIOS
+from app.services.video_history import add_video_record, list_video_records, get_video_record, delete_video_record, update_video_record
 
 logger = logging.getLogger(__name__)
 
@@ -328,6 +329,21 @@ async def sora_download(req: SoraDownloadRequest):
 
         local_path = await download_sora_video(video_url)
         filename = Path(local_path).name
+
+        # 自动保存到历史记录
+        try:
+            add_video_record(
+                filename=filename,
+                prompt=status_result.get("prompt", ""),
+                model=status_result.get("model", ""),
+                duration=status_result.get("duration", 0),
+                aspect_ratio=status_result.get("aspect_ratio", ""),
+                local_path=local_path,
+                title=filename,
+            )
+        except Exception:
+            logger.exception("Failed to auto-save video to history")
+
         return {
             "success": True,
             "data": {
@@ -355,3 +371,70 @@ async def serve_sora_file(filename: str):
         media_type="video/mp4",
         filename=filename,
     )
+
+
+# ──────────────────────────────────────────────
+# 视频历史 CRUD API
+# ──────────────────────────────────────────────
+
+class VideoHistorySaveRequest(BaseModel):
+    filename: str = Field(..., description="视频文件名")
+    prompt: str = Field("", description="视频生成提示词")
+    model: str = Field("", description="使用的模型")
+    duration: int = Field(0, description="视频时长（秒）")
+    aspect_ratio: str = Field("", description="画面比例")
+    local_path: str = Field(..., description="本地文件路径")
+    thumbnail_url: str = Field("", description="缩略图 URL")
+    title: str = Field("", description="视频标题")
+    tags: list[str] = Field(default_factory=list, description="标签列表")
+
+
+class VideoHistoryUpdateRequest(BaseModel):
+    title: str | None = Field(None, description="视频标题")
+    tags: list[str] | None = Field(None, description="标签列表")
+
+
+@router.get("/history")
+async def history_list(page: int = 1, page_size: int = 20):
+    result = list_video_records(page=page, page_size=page_size)
+    return {"success": True, "data": result}
+
+
+@router.get("/history/{video_id}")
+async def history_detail(video_id: str):
+    record = get_video_record(video_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="视频记录不存在")
+    return {"success": True, "data": record}
+
+
+@router.put("/history/{video_id}")
+async def history_update(video_id: str, req: VideoHistoryUpdateRequest):
+    record = update_video_record(video_id, title=req.title, tags=req.tags)
+    if not record:
+        raise HTTPException(status_code=404, detail="视频记录不存在")
+    return {"success": True, "data": record}
+
+
+@router.delete("/history/{video_id}")
+async def history_delete(video_id: str):
+    deleted = delete_video_record(video_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="视频记录不存在")
+    return {"success": True, "message": "删除成功"}
+
+
+@router.post("/history/save")
+async def history_save(req: VideoHistorySaveRequest):
+    record = add_video_record(
+        filename=req.filename,
+        prompt=req.prompt,
+        model=req.model,
+        duration=req.duration,
+        aspect_ratio=req.aspect_ratio,
+        local_path=req.local_path,
+        thumbnail_url=req.thumbnail_url,
+        title=req.title,
+        tags=req.tags,
+    )
+    return {"success": True, "data": record}
