@@ -266,9 +266,9 @@ async def read_multimodal_file(project_id: str, file_name: str):
 
 class SoraCreateRequest(BaseModel):
     prompt: str = Field(..., description="视频生成提示词")
-    model: str = Field("sora-2-pro", description="模型: sora-2-pro / veo_3_1-lite / veo3.1-4k 等")
+    model: str = Field("wan2.6-i2v-flash", description="模型: sora-2-pro / wan2.6-i2v / wan2.6-i2v-flash / veo3.1-4k 等")
     orientation: str = Field("portrait", description="portrait 竖屏 / landscape 横屏")
-    duration: int = Field(4, description="视频时长（秒）")
+    duration: int = Field(5, description="视频时长（秒）")
     size: str = Field("large", description="small 720p / large 1080p")
     watermark: bool = Field(False, description="是否带水印")
     private: bool = Field(True, description="是否隐藏视频")

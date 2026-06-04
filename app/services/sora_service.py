@@ -20,31 +20,32 @@ SORA_VIDEO_DIR = Path("storage/sora_videos")
 MODEL_ENDPOINT_MAP: dict[str, str] = {
     # Sora 系列
     "sora-2-pro": "/video/create",
+    # 万相系列 (阿里通义万相)
+    "wan2.6-i2v": "/video/create",
+    "wan2.6-i2v-flash": "/video/create",
     # Veo 系列
     "veo_3_1-lite": "/videos",
-    "veo_3_1-lite-4K": "/videos",
-    "veo_3_1-components-4K": "/videos",
     "veo3.1-4k": "/video/create",
 }
 
 MODEL_DURATION_OPTIONS: dict[str, list[int]] = {
     "sora-2-pro": [4, 8, 12],
+    "wan2.6-i2v": [5, 8, 10],
+    "wan2.6-i2v-flash": [5, 8, 10],
     "veo_3_1-lite": [3, 5, 8],
-    "veo_3_1-lite-4K": [3, 5, 8],
-    "veo_3_1-components-4K": [3, 5, 8],
     "veo3.1-4k": [3, 5, 8],
 }
 
 MODEL_ASPECT_RATIOS: dict[str, list[str]] = {
     "sora-2-pro": ["9:16", "16:9", "1:1"],
+    "wan2.6-i2v": ["9:16", "16:9", "1:1"],
+    "wan2.6-i2v-flash": ["9:16", "16:9", "1:1"],
     "veo_3_1-lite": ["9:16", "16:9", "1:1"],
-    "veo_3_1-lite-4K": ["9:16", "16:9", "1:1"],
-    "veo_3_1-components-4K": ["9:16", "16:9", "1:1"],
     "veo3.1-4k": ["9:16", "16:9", "1:1"],
 }
 
 # /v1/videos 端点需要 multipart/form-data
-MULTIPART_MODELS = {"veo_3_1-lite", "veo_3_1-lite-4K", "veo_3_1-components-4K"}
+MULTIPART_MODELS = {"veo_3_1-lite"}
 
 
 def _init_storage() -> None:

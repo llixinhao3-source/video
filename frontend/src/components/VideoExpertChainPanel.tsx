@@ -467,26 +467,32 @@ export default function VideoExpertChainPanel() {
     })
     const [soraOrientation, setSoraOrientation] = useState<'portrait' | 'landscape'>('portrait')
     const [soraSize, setSoraSize] = useState<'small' | 'large'>('large')
-    const [soraDuration, setSoraDuration] = useState(4)
-    const [soraModel, setSoraModel] = useState<string>('sora-2-pro')
+    const [soraDuration, setSoraDuration] = useState(5)
+    const [soraModel, setSoraModel] = useState<string>('wan2.6-i2v-flash')
     const [isSoraCreating, setIsSoraCreating] = useState(false)
     const [isSoraPolling, setIsSoraPolling] = useState(false)
     const [soraTaskId, setSoraTaskId] = useState<string | null>(null)
-    const [soraTaskModel, setSoraTaskModel] = useState<string>('sora-2-pro')
+    const [soraTaskModel, setSoraTaskModel] = useState<string>('wan2.6-i2v-flash')
     const [soraVideoResult, setSoraVideoResult] = useState<{video_url?: string; download_url?: string; filename?: string} | null>(null)
 
     const SORA_DURATION_MAP: Record<string, number[]> = {
         'sora-2-pro': [4, 8, 12],
+        'wan2.6-i2v': [5, 8, 10],
+        'wan2.6-i2v-flash': [5, 8, 10],
         'veo_3_1-lite': [3, 5, 8],
         'veo3.1-4k': [3, 5, 8],
     }
     const SORA_SIZE_MAP: Record<string, { value: string; label: string }[]> = {
         'sora-2-pro': [{ value: 'large', label: '1080p' }],
+        'wan2.6-i2v': [{ value: 'large', label: '1080p' }],
+        'wan2.6-i2v-flash': [{ value: 'small', label: '720p' }],
         'veo_3_1-lite': [{ value: 'small', label: '720p' }],
         'veo3.1-4k': [{ value: 'large', label: '4K' }],
     }
     const SORA_MODEL_LABELS: Record<string, string> = {
         'sora-2-pro': 'Sora 2 Pro',
+        'wan2.6-i2v': '万相 2.6',
+        'wan2.6-i2v-flash': '万相 2.6 Flash',
         'veo_3_1-lite': 'Veo 3.1 Lite',
         'veo3.1-4k': 'Veo 3.1 4K',
     }

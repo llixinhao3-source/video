@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     SORA_API_KEY: str = "sk-QJn36M0Ls2l0OkGoJdkktC63C9Fmxd4UDruTJxFkx2zEWqzO"
     SORA_API_BASE: str = "https://api.vectorengine.cn/v1"
-    SORA_MODEL: str = "sora-2-pro"
+    SORA_MODEL: str = "wan2.6-i2v-flash"
 
     FEISHU_APP_ID: str = ""
     FEISHU_APP_SECRET: str = ""
