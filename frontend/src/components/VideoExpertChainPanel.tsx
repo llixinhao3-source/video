@@ -466,22 +466,35 @@ export default function VideoExpertChainPanel() {
         return ''
     })
     const [soraOrientation, setSoraOrientation] = useState<'portrait' | 'landscape'>('portrait')
-    const [soraSize, setSoraSize] = useState<'small' | 'large'>('small')
-    const [soraDuration, setSoraDuration] = useState(10)
-    const [soraModel, setSoraModel] = useState<'sora-2-all' | 'sora-2-pro'>('sora-2-all')
+    const [soraSize, setSoraSize] = useState<'small' | 'large'>('large')
+    const [soraDuration, setSoraDuration] = useState(4)
+    const [soraModel, setSoraModel] = useState<string>('sora-2-pro')
     const [isSoraCreating, setIsSoraCreating] = useState(false)
     const [isSoraPolling, setIsSoraPolling] = useState(false)
     const [soraTaskId, setSoraTaskId] = useState<string | null>(null)
-    const [soraTaskModel, setSoraTaskModel] = useState<string>('sora-2-all')
+    const [soraTaskModel, setSoraTaskModel] = useState<string>('sora-2-pro')
     const [soraVideoResult, setSoraVideoResult] = useState<{video_url?: string; download_url?: string; filename?: string} | null>(null)
 
     const SORA_DURATION_MAP: Record<string, number[]> = {
-        'sora-2-all': [10, 15],
-        'sora-2-pro': [15, 25],
+        'sora-2-pro': [4, 8, 12],
+        'veo_3_1-lite': [3, 5, 8],
+        'veo_3_1-lite-4K': [3, 5, 8],
+        'veo_3_1-components-4K': [3, 5, 8],
+        'veo3.1-4k': [3, 5, 8],
     }
     const SORA_SIZE_MAP: Record<string, { value: string; label: string }[]> = {
-        'sora-2-all': [{ value: 'small', label: '720p' }],
         'sora-2-pro': [{ value: 'large', label: '1080p' }],
+        'veo_3_1-lite': [{ value: 'small', label: '720p' }],
+        'veo_3_1-lite-4K': [{ value: 'large', label: '4K' }],
+        'veo_3_1-components-4K': [{ value: 'large', label: '4K' }],
+        'veo3.1-4k': [{ value: 'large', label: '4K' }],
+    }
+    const SORA_MODEL_LABELS: Record<string, string> = {
+        'sora-2-pro': 'Sora 2 Pro',
+        'veo_3_1-lite': 'Veo 3.1 Lite',
+        'veo_3_1-lite-4K': 'Veo 3.1 4K',
+        'veo_3_1-components-4K': 'Veo 3.1 组件4K',
+        'veo3.1-4k': 'Veo 3.1 4K',
     }
 
     const handleSoraCreate = async () => {
@@ -500,6 +513,7 @@ export default function VideoExpertChainPanel() {
                     size: soraSize,
                     watermark: false,
                     private: true,
+                    aspect_ratio: soraOrientation === 'portrait' ? '9:16' : '16:9',
                 }),
             })
             if (!res.ok) {
@@ -523,7 +537,7 @@ export default function VideoExpertChainPanel() {
 
     const startSoraPolling = (taskId: string) => {
         let attempts = 0
-        const maxAttempts = 60
+        const maxAttempts = 120
         const poll = async () => {
             if (attempts >= maxAttempts) {
                 showToast('视频生成超时，请稍后手动查询状态', 'error')
@@ -568,9 +582,9 @@ export default function VideoExpertChainPanel() {
                     showToast('视频生成失败，请重试', 'error')
                     return
                 }
-                setTimeout(poll, 10000)
+                setTimeout(poll, 15000)
             } catch {
-                setTimeout(poll, 10000)
+                setTimeout(poll, 15000)
             }
         }
         setTimeout(poll, 5000)
@@ -886,23 +900,24 @@ export default function VideoExpertChainPanel() {
                             </div>
                             <div>
                                 <label className="text-[11px] font-medium text-[#86868B] mb-1.5 block">模型</label>
-                                <div className="flex gap-1.5">
-                                    <button
-                                        onClick={() => { setSoraModel('sora-2-all'); setSoraDuration(10); setSoraSize('small') }}
-                                        className={`flex-1 py-2.5 rounded-xl text-[11px] font-medium border transition-all duration-200 ${
-                                            soraModel === 'sora-2-all' ? 'border-[#5856D6]/40 bg-[#5856D6]/8 text-[#5856D6]' : 'border-slate-100 bg-white text-[#86868B]'
-                                        }`}
-                                    >
-                                        Sora-2-All
-                                    </button>
-                                    <button
-                                        onClick={() => { setSoraModel('sora-2-pro'); setSoraDuration(15); setSoraSize('large') }}
-                                        className={`flex-1 py-2.5 rounded-xl text-[11px] font-medium border transition-all duration-200 ${
-                                            soraModel === 'sora-2-pro' ? 'border-[#5856D6]/40 bg-[#5856D6]/8 text-[#5856D6]' : 'border-slate-100 bg-white text-[#86868B]'
-                                        }`}
-                                    >
-                                        Sora-2-Pro
-                                    </button>
+                                <div className="grid grid-cols-2 gap-1.5">
+                                    {Object.entries(SORA_MODEL_LABELS).map(([key, label]) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => {
+                                                setSoraModel(key)
+                                                const durations = SORA_DURATION_MAP[key]
+                                                if (durations?.length) setSoraDuration(durations[0])
+                                                const sizes = SORA_SIZE_MAP[key]
+                                                if (sizes?.length) setSoraSize(sizes[0].value as 'small' | 'large')
+                                            }}
+                                            className={`py-2.5 rounded-xl text-[11px] font-medium border transition-all duration-200 ${
+                                                soraModel === key ? 'border-[#5856D6]/40 bg-[#5856D6]/8 text-[#5856D6]' : 'border-slate-100 bg-white text-[#86868B]'
+                                            }`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>

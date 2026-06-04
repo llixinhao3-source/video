@@ -11,12 +11,12 @@ class Settings(BaseSettings):
     CLAUDE_MODEL: str = "DeepSeek-V4-pro"
 
     VIDEO_API_KEY: str = ""
-    VIDEO_API_BASE: str = "https://api.vectorengine.ai/v1"
+    VIDEO_API_BASE: str = "https://api.vectorengine.cn/v1"
     VIDEO_MODEL: str = "gpt-5.5-pro"
 
-    SORA_API_KEY: str = ""
-    SORA_API_BASE: str = "https://api.vectorengine.ai/v1"
-    SORA_MODEL: str = "sora-2"
+    SORA_API_KEY: str = "sk-QJn36M0Ls2l0OkGoJdkktC63C9Fmxd4UDruTJxFkx2zEWqzO"
+    SORA_API_BASE: str = "https://api.vectorengine.cn/v1"
+    SORA_MODEL: str = "sora-2-pro"
 
     FEISHU_APP_ID: str = ""
     FEISHU_APP_SECRET: str = ""

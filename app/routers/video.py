@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from app.config import settings
 from app.services.video_engine import execute_video_workflow
 from app.services.video_multimodal_engine import multimodal_engine, VIDEO_AGENT_PRESETS, VIDEO_AGENT_FILE_CHAIN
-from app.services.sora_service import create_sora_video, check_sora_status, poll_sora_until_done, download_sora_video, SORA_VIDEO_DIR
+from app.services.sora_service import create_sora_video, check_sora_status, poll_sora_until_done, download_sora_video, SORA_VIDEO_DIR, MODEL_DURATION_OPTIONS, MODEL_ASPECT_RATIOS
 
 logger = logging.getLogger(__name__)
 
@@ -266,13 +266,14 @@ async def read_multimodal_file(project_id: str, file_name: str):
 
 class SoraCreateRequest(BaseModel):
     prompt: str = Field(..., description="视频生成提示词")
-    model: str = Field("sora-2-all", description="模型: sora-2 / sora-2-all")
+    model: str = Field("sora-2-pro", description="模型: sora-2-pro / veo_3_1-lite / veo3.1-4k 等")
     orientation: str = Field("portrait", description="portrait 竖屏 / landscape 横屏")
-    duration: int = Field(10, description="视频时长，支持 10")
-    size: str = Field("small", description="small 720p / large 1080p")
+    duration: int = Field(4, description="视频时长（秒）")
+    size: str = Field("large", description="small 720p / large 1080p")
     watermark: bool = Field(False, description="是否带水印")
     private: bool = Field(True, description="是否隐藏视频")
     images: list[str] = Field(default_factory=list, description="参考图片链接列表")
+    aspect_ratio: str | None = Field(None, description="画面比例 9:16/16:9/1:1，不填则根据 orientation 推导")
 
 
 @router.post("/sora-create")
@@ -287,6 +288,7 @@ async def sora_create(req: SoraCreateRequest):
             watermark=req.watermark,
             private=req.private,
             images=req.images,
+            aspect_ratio=req.aspect_ratio,
         )
         return {"success": True, "data": result}
     except ValueError as e:

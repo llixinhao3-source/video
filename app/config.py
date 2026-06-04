@@ -7,12 +7,12 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-chat"
 
     video_api_key: str = ""
-    video_api_base: str = "https://api.vectorengine.ai/v1"
+    video_api_base: str = "https://api.vectorengine.cn/v1"
     video_model: str = "gpt-5.5-pro"
 
-    sora_api_key: str = ""
-    sora_api_base: str = "https://api.vectorengine.ai/v1"
-    sora_model: str = "sora-2"
+    sora_api_key: str = "sk-QJn36M0Ls2l0OkGoJdkktC63C9Fmxd4UDruTJxFkx2zEWqzO"
+    sora_api_base: str = "https://api.vectorengine.cn/v1"
+    sora_model: str = "sora-2-pro"
 
     feishu_app_id: str = ""
     feishu_app_secret: str = ""
