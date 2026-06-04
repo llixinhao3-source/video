@@ -478,22 +478,16 @@ export default function VideoExpertChainPanel() {
     const SORA_DURATION_MAP: Record<string, number[]> = {
         'sora-2-pro': [4, 8, 12],
         'veo_3_1-lite': [3, 5, 8],
-        'veo_3_1-lite-4K': [3, 5, 8],
-        'veo_3_1-components-4K': [3, 5, 8],
         'veo3.1-4k': [3, 5, 8],
     }
     const SORA_SIZE_MAP: Record<string, { value: string; label: string }[]> = {
         'sora-2-pro': [{ value: 'large', label: '1080p' }],
         'veo_3_1-lite': [{ value: 'small', label: '720p' }],
-        'veo_3_1-lite-4K': [{ value: 'large', label: '4K' }],
-        'veo_3_1-components-4K': [{ value: 'large', label: '4K' }],
         'veo3.1-4k': [{ value: 'large', label: '4K' }],
     }
     const SORA_MODEL_LABELS: Record<string, string> = {
         'sora-2-pro': 'Sora 2 Pro',
         'veo_3_1-lite': 'Veo 3.1 Lite',
-        'veo_3_1-lite-4K': 'Veo 3.1 4K',
-        'veo_3_1-components-4K': 'Veo 3.1 组件4K',
         'veo3.1-4k': 'Veo 3.1 4K',
     }
 
