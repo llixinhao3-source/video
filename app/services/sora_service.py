@@ -67,6 +67,7 @@ async def create_sora_video(
     private: bool = True,
     images: list[str] | None = None,
     aspect_ratio: str | None = None,
+    max_retries: int = 3,
 ) -> dict[str, Any]:
     api_key = settings.sora_api_key
 
@@ -80,40 +81,50 @@ async def create_sora_video(
     url = _get_endpoint(model)
     headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/json"}
 
-    if model in MULTIPART_MODELS:
-        # /v1/videos 端点 → multipart/form-data
-        form_data = {
-            "model": (None, model),
-            "prompt": (None, prompt),
-            "duration": (None, f"{duration}s"),
-            "aspect_ratio": (None, aspect_ratio),
-        }
-        logger.info("Creating video (multipart) | model=%s | endpoint=%s | duration=%ds", model, url, duration)
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(url, headers=headers, files=form_data)
-    else:
-        # /v1/video/create 端点 → JSON
-        headers["Content-Type"] = "application/json"
-        payload: dict[str, Any] = {
-            "model": model,
-            "prompt": prompt,
-            "duration": f"{duration}s" if model.startswith("veo") else duration,
-            "aspect_ratio": aspect_ratio,
-        }
-        # sora-2-pro 专有字段
-        if model == "sora-2-pro":
-            payload.update({
-                "orientation": orientation,
-                "size": size,
-                "watermark": watermark,
-                "private": private,
-                "images": images or [],
-            })
-        logger.info("Creating video (json) | model=%s | endpoint=%s | duration=%d", model, url, duration)
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(url, json=payload, headers=headers)
+    for attempt in range(1, max_retries + 1):
+        if model in MULTIPART_MODELS:
+            # /v1/videos 端点 → multipart/form-data
+            form_data = {
+                "model": (None, model),
+                "prompt": (None, prompt),
+                "duration": (None, f"{duration}s"),
+                "aspect_ratio": (None, aspect_ratio),
+            }
+            logger.info("Creating video (multipart) | model=%s | attempt=%d/%d", model, attempt, max_retries)
+            async with httpx.AsyncClient(timeout=60) as client:
+                resp = await client.post(url, headers=headers, files=form_data)
+        else:
+            # /v1/video/create 端点 → JSON
+            json_headers = {**headers, "Content-Type": "application/json"}
+            payload: dict[str, Any] = {
+                "model": model,
+                "prompt": prompt,
+                "duration": f"{duration}s" if model.startswith("veo") else duration,
+                "aspect_ratio": aspect_ratio,
+            }
+            # sora-2-pro 专有字段
+            if model == "sora-2-pro":
+                payload.update({
+                    "orientation": orientation,
+                    "size": size,
+                    "watermark": watermark,
+                    "private": private,
+                    "images": images or [],
+                })
+            logger.info("Creating video (json) | model=%s | attempt=%d/%d", model, attempt, max_retries)
+            async with httpx.AsyncClient(timeout=60) as client:
+                resp = await client.post(url, json=payload, headers=json_headers)
 
-    if resp.status_code != 200:
+        if resp.status_code == 200:
+            break
+
+        # 429/503 自动重试
+        if resp.status_code in (429, 503) and attempt < max_retries:
+            wait = 10 * attempt
+            logger.warning("Video API %d, retrying in %ds (attempt %d/%d)", resp.status_code, wait, attempt, max_retries)
+            await asyncio.sleep(wait)
+            continue
+
         logger.error("Video create failed: %d %s", resp.status_code, resp.text[:500])
         raise ValueError(f"视频生成 API 返回错误: {resp.status_code} - {resp.text[:300]}")
 
